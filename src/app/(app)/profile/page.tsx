@@ -16,17 +16,17 @@ export default function ProfilePage() {
         <div className="md:col-span-1">
             <Card>
                 <CardHeader>
-                    <CardTitle>Menu</CardTitle>
+                    <CardTitle className="font-headline text-lg">Menu</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-col gap-1">
-                    <Button variant="ghost" className="justify-start gap-2"><User className="h-4 w-4" /> Profile</Button>
-                    <Button variant="ghost" className="justify-start gap-2"><Wallet className="h-4 w-4" /> Wallet</Button>
-                    <Button variant="ghost" className="justify-start gap-2"><Bell className="h-4 w-4" /> Notifications</Button>
-                    <Button variant="ghost" className="justify-start gap-2"><Shield className="h-4 w-4" /> Security</Button>
+                    <Button variant="ghost" className="justify-start gap-2 font-body text-lg"><User className="h-5 w-5" /> Profile</Button>
+                    <Button variant="ghost" className="justify-start gap-2 font-body text-lg"><Wallet className="h-5 w-5" /> Wallet</Button>
+                    <Button variant="ghost" className="justify-start gap-2 font-body text-lg"><Bell className="h-5 w-5" /> Notifications</Button>
+                    <Button variant="ghost" className="justify-start gap-2 font-body text-lg"><Shield className="h-5 w-5" /> Security</Button>
                     <Separator className="my-2"/>
                     <Link href="/" className="w-full">
-                      <Button variant="ghost" className="justify-start gap-2 w-full text-destructive hover:text-destructive">
-                        <LogOut className="h-4 w-4" /> Logout
+                      <Button variant="ghost" className="justify-start gap-2 w-full text-destructive hover:text-destructive font-body text-lg">
+                        <LogOut className="h-5 w-5" /> Logout
                       </Button>
                     </Link>
                 </CardContent>
@@ -36,45 +36,45 @@ export default function ProfilePage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="font-headline">Public Profile</CardTitle>
-                    <CardDescription>This information will be displayed on the leaderboard.</CardDescription>
+                    <CardDescription className="font-body text-base">This is how other players see you.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center gap-4">
-                        <Avatar className="h-20 w-20">
+                        <Avatar className="h-20 w-20 border-4 border-primary">
                             <AvatarImage src="https://picsum.photos/seed/myavatar/200/200" />
-                            <AvatarFallback>AT</AvatarFallback>
+                            <AvatarFallback>DC</AvatarFallback>
                         </Avatar>
-                        <Button variant="outline">Change Avatar</Button>
+                        <Button variant="outline" className="font-body text-base">Change Avatar</Button>
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="username">Username</Label>
-                        <Input id="username" defaultValue="You" />
+                        <Label htmlFor="username" className="font-body text-base">Username</Label>
+                        <Input id="username" defaultValue="You" className="font-body text-base"/>
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="wallet">Wallet Address</Label>
-                        <Input id="wallet" defaultValue="0x1234...5678" readOnly />
+                        <Label htmlFor="wallet" className="font-body text-base">Wallet Address</Label>
+                        <Input id="wallet" defaultValue="0x1234...5678" readOnly className="font-body text-base"/>
                     </div>
                 </CardContent>
             </Card>
             <Card className="mt-8">
                 <CardHeader>
                     <CardTitle className="font-headline">Display Settings</CardTitle>
-                    <CardDescription>Customize the look and feel of the application.</CardDescription>
+                    <CardDescription className="font-body text-base">Customize the look and feel of the game.</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex items-center justify-between p-4 rounded-lg border">
                         <div>
-                            <Label htmlFor="theme-toggle-label">Theme</Label>
-                            <p id="theme-toggle-label" className="text-sm text-muted-foreground">Select a light or dark theme.</p>
+                            <Label htmlFor="theme-toggle-label" className="font-body text-base">Theme</Label>
+                            <p id="theme-toggle-label" className="text-sm text-muted-foreground font-body">Select a light or dark theme.</p>
                         </div>
                         <ThemeToggle />
                     </div>
                 </CardContent>
             </Card>
              <div className="mt-8 flex justify-end">
-                <Button>Save Changes</Button>
+                <Button size="lg" className="font-body text-lg">Save Changes</Button>
             </div>
         </div>
        </div>

@@ -32,6 +32,6 @@ export const achievementsData: Achievement[] = [
     { id: '2', title: 'Diamond Hands', description: 'Hold a token for 7 days straight.', icon: 'DiamondHands', status: 'in_progress', progress: 66, reward: 100 },
     { id: '3', title: 'Paper Chaser', description: 'Execute 10 trades in a single day.', icon: 'PaperChaser', status: 'locked', reward: 150 },
     { id: '4', title: 'Portfolio Pro', description: 'Grow your portfolio by 25%.', icon: 'PortfolioPro', status: 'in_progress', progress: 80, reward: 200 },
-    { id: '5', title: 'Top Tycoon', description: 'Reach the top 10 on the leaderboard.', icon: 'TopTycoon', status: 'locked', reward: 500 },
-    { id: '6', title: 'Market Guru', description: 'Use the AI investment tool 5 times.', icon: 'MarketGuru', status: 'unlocked', reward: 75 },
+    { id: '5', title: 'Top Player', description: 'Reach the top 10 on the leaderboard.', icon: 'TopTycoon', status: 'locked', reward: 500 },
+    { id: '6', title: 'Oracle Seeker', description: 'Use the AI Oracle 5 times.', icon: 'MarketGuru', status: 'unlocked', reward: 75 },
 ];

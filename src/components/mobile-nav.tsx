@@ -33,7 +33,7 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
         >
             <Logo className="h-8 w-8 mr-2" />
-            <span className="font-bold font-headline text-lg">African Tycoon</span>
+            <span className="font-bold font-headline text-lg text-primary">Dreamcoin</span>
         </Link>
         <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
           <div className="flex flex-col space-y-3">
@@ -43,7 +43,7 @@ export function MobileNav() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="text-muted-foreground transition-colors hover:text-primary"
+                    className="font-body text-xl text-muted-foreground transition-colors hover:text-primary"
                     onClick={() => setOpen(false)}
                   >
                     {item.label}

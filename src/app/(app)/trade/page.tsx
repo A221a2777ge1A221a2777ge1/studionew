@@ -24,8 +24,8 @@ import { useToast } from "@/hooks/use-toast";
 
 const TokenIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 0 L100 25 L100 75 L50 100 L0 75 L0 25 Z" fill="hsl(var(--primary))" />
-        <text x="50" y="68" fontFamily="Poppins" fontWeight="bold" fontSize="50" fill="hsl(var(--primary-foreground))" textAnchor="middle">A</text>
+        <path d="M50 5 L95 40 L80 95 L20 95 L5 40 Z" fill="hsl(var(--primary))" />
+        <text x="50" y="68" fontFamily='"Press Start 2P"' fontWeight="bold" fontSize="50" fill="hsl(var(--primary-foreground))" textAnchor="middle">D</text>
     </svg>
 );
 
@@ -67,7 +67,7 @@ export default function TradePage() {
       setIsSwapping(false);
       toast({
         title: "Swap Successful!",
-        description: `You swapped ${fromAmount} BNB for ${toAmount} ATKN.`,
+        description: `You swapped ${fromAmount} BNB for ${toAmount} DREAM.`,
         variant: "default",
       });
     }, 2000);
@@ -75,20 +75,20 @@ export default function TradePage() {
 
   return (
     <div className="container py-8 flex justify-center">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md border-primary border-2">
         <CardHeader>
           <CardTitle className="font-headline flex items-center justify-between">
             <div className="flex items-center gap-2">
                 <ArrowRightLeft className="h-5 w-5"/>
-                Swap Tokens
+                Swap
             </div>
             <Settings className="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="font-body text-base">
             Trade your tokens seamlessly and securely.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 font-body text-lg">
           <div className="p-4 rounded-md border bg-muted/30 space-y-2">
             <Label htmlFor="fromAmount">From</Label>
             <div className="flex items-center gap-2">
@@ -97,14 +97,14 @@ export default function TradePage() {
                 type="number"
                 value={fromAmount}
                 onChange={(e) => setFromAmount(e.target.value)}
-                className="text-lg font-mono"
+                className="text-xl font-mono"
               />
-              <Button variant="outline" className="flex-shrink-0">
+              <Button variant="outline" className="flex-shrink-0 font-body text-base">
                 <BnbIcon className="h-5 w-5 mr-2" />
                 BNB
               </Button>
             </div>
-            <div className="text-xs text-muted-foreground text-right">Balance: 12.5 BNB</div>
+            <div className="text-sm text-muted-foreground text-right">Balance: 12.5 BNB</div>
           </div>
           
           <div className="relative flex justify-center">
@@ -121,28 +121,28 @@ export default function TradePage() {
                 type="number"
                 value={toAmount}
                 readOnly
-                className="text-lg font-mono"
+                className="text-xl font-mono"
               />
-              <Button variant="outline" className="flex-shrink-0">
+              <Button variant="outline" className="flex-shrink-0 font-body text-base">
                 <TokenIcon className="h-5 w-5 mr-2" />
-                ATKN
+                DREAM
               </Button>
             </div>
-             <div className="text-xs text-muted-foreground text-right">Balance: 50,000 ATKN</div>
+             <div className="text-xs text-muted-foreground text-right">Balance: 50,000 DREAM</div>
           </div>
 
-          <div className="text-sm text-muted-foreground flex justify-between items-center">
+          <div className="text-base text-muted-foreground flex justify-between items-center">
             <span>Price</span>
-            <span className="font-mono">1 ATKN ≈ {price.toFixed(5)} BNB</span>
+            <span className="font-mono">1 DREAM ≈ {price.toFixed(5)} BNB</span>
           </div>
 
            <div className="flex items-center gap-4">
             <Label>Slippage</Label>
             <Select value={slippage} onValueChange={setSlippage}>
-                <SelectTrigger className="w-[100px]">
+                <SelectTrigger className="w-[100px] font-body text-base">
                     <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="font-body text-base">
                     <SelectItem value="0.1">0.1%</SelectItem>
                     <SelectItem value="0.5">0.5%</SelectItem>
                     <SelectItem value="1">1.0%</SelectItem>
@@ -151,12 +151,12 @@ export default function TradePage() {
            </div>
         </CardContent>
         <CardFooter className="flex-col gap-2">
-          <Button size="lg" className="w-full" onClick={handleSwap} disabled={isSwapping}>
+          <Button size="lg" className="w-full font-headline text-lg" onClick={handleSwap} disabled={isSwapping}>
             {isSwapping ? <Loader2 className="h-5 w-5 animate-spin" /> : "Swap Tokens"}
           </Button>
-          <div className="flex items-center text-xs text-muted-foreground gap-1">
+          <div className="flex items-center text-xs text-muted-foreground gap-1 font-body">
             <Info className="h-3 w-3" />
-            <span>Transactions are simulated on this platform.</span>
+            <span>Transactions are simulated.</span>
           </div>
         </CardFooter>
       </Card>

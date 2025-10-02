@@ -11,8 +11,8 @@ export const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/trade", label: "Trade", icon: ArrowRightLeft },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-    { href: "/achievements", label: "Achievements", icon: Award },
-    { href: "/invest", label: "AI Invest", icon: BrainCircuit },
+    { href: "/achievements", label: "Quests", icon: Award },
+    { href: "/invest", label: "AI Oracle", icon: BrainCircuit },
 ]
 
 export function MainNav({
@@ -31,7 +31,7 @@ export function MainNav({
                 key={link.href}
                 href={link.href}
                 className={cn(
-                    "text-sm font-medium transition-colors hover:text-primary",
+                    "text-lg font-body transition-colors hover:text-primary",
                     pathname === link.href ? "text-primary" : "text-muted-foreground"
                 )}
             >

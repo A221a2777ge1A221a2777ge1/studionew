@@ -34,19 +34,19 @@ export function AuthForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <Card>
+      <Card className="border-primary border-2 shadow-lg shadow-primary/20">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-2xl">Join the Elite</CardTitle>
-          <CardDescription>
-            Connect your wallet to start building your fortune.
+          <CardTitle className="font-headline text-2xl text-accent">START GAME</CardTitle>
+          <CardDescription className="font-body text-lg">
+            Connect your wallet to begin.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-            <Button variant="outline" className="w-full" onClick={handleAuthAction}>
+            <Button size="lg" className="w-full font-body text-lg" onClick={handleAuthAction}>
                 <GoogleIcon className="mr-2 h-5 w-5 fill-current" />
                 Continue with Google
             </Button>
-            <Button variant="outline" className="w-full" onClick={handleAuthAction}>
+            <Button size="lg" className="w-full font-body text-lg" onClick={handleAuthAction}>
                 <MetaMaskIcon className="mr-2 h-5 w-5" />
                 Continue with MetaMask
             </Button>

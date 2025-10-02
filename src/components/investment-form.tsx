@@ -68,18 +68,18 @@ export function InvestmentForm() {
 
   return (
     <div className="grid gap-8 md:grid-cols-2">
-      <Card>
+      <Card className="border-primary border-2">
         <CardHeader>
-            <div className="flex items-center gap-2">
-                <BrainCircuit className="h-6 w-6 text-primary" />
+            <div className="flex items-center gap-3">
+                <BrainCircuit className="h-7 w-7 text-primary" />
                 <CardTitle className="font-headline text-2xl">
-                    Intelligent Investment Tool
+                    Consult the Oracle
                 </CardTitle>
             </div>
         </CardHeader>
         <CardContent>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 font-body text-lg">
               <FormField
                 control={form.control}
                 name="investmentHistory"
@@ -88,8 +88,8 @@ export function InvestmentForm() {
                     <FormLabel>Investment History</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., 'I have been investing for 5 years, primarily in large-cap tech stocks and some crypto like BTC and ETH. I made significant gains during the 2021 bull run but also experienced losses in the recent downturn...'"
-                        className="min-h-[120px]"
+                        placeholder="e.g., 'I have been investing for 5 years, primarily in large-cap tech stocks and some crypto like BTC and ETH...'"
+                        className="min-h-[120px] font-body text-base"
                         {...field}
                       />
                     </FormControl>
@@ -105,20 +105,20 @@ export function InvestmentForm() {
                 name="riskAppetite"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Risk Appetite</FormLabel>
+                    <FormLabel>Risk Level</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="font-body text-base">
                           <SelectValue placeholder="Select your risk tolerance" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="low">Low - Capital preservation is key</SelectItem>
-                        <SelectItem value="medium">Medium - Balanced growth and risk</SelectItem>
-                        <SelectItem value="high">High - Aggressive growth, comfortable with volatility</SelectItem>
+                      <SelectContent className="font-body text-base">
+                        <SelectItem value="low">Low - Safe & Secure</SelectItem>
+                        <SelectItem value="medium">Medium - Balanced</SelectItem>
+                        <SelectItem value="high">High - High Risk, High Reward</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -130,28 +130,28 @@ export function InvestmentForm() {
                 name="marketConditions"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Market Conditions</FormLabel>
+                    <FormLabel>Market Conditions</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="e.g., 'The market seems to be in a consolidation phase after a recent rally. Inflation is still a concern, and the Fed's next move is uncertain. Some altcoin sectors are showing strength...'"
-                        className="min-h-[120px]"
+                        placeholder="e.g., 'The market seems to be in a consolidation phase...'"
+                        className="min-h-[120px] font-body text-base"
                         {...field}
                       />
                     </FormControl>
                     <FormDescription>
-                      Your analysis of the current market sentiment and trends.
+                      Your analysis of the current market sentiment.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button type="submit" disabled={isLoading} className="w-full">
+              <Button type="submit" disabled={isLoading} size="lg" className="w-full font-headline text-lg">
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <Sparkles className="mr-2 h-4 w-4" />
                 )}
-                Generate Strategy
+                Generate Prophecy
               </Button>
             </form>
           </Form>
@@ -162,34 +162,34 @@ export function InvestmentForm() {
         {isLoading && (
             <div className="flex flex-col items-center gap-4 text-muted-foreground">
                 <Loader2 className="h-12 w-12 animate-spin text-primary"/>
-                <p className="font-semibold">Our AI is analyzing your data...</p>
-                <p className="text-sm text-center">This may take a few moments.</p>
+                <p className="font-semibold font-headline text-xl">The Oracle is gazing into the future...</p>
+                <p className="text-lg text-center font-body">This may take a few moments.</p>
             </div>
         )}
         {error && (
             <Card className="w-full bg-destructive/10 border-destructive">
                 <CardHeader>
-                    <CardTitle className="text-destructive">Error</CardTitle>
+                    <CardTitle className="text-destructive font-headline">Oracle Error</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p>{error}</p>
+                    <p className="font-body text-lg">{error}</p>
                 </CardContent>
             </Card>
         )}
         {result && (
-            <Card className="w-full animate-in fade-in-50">
+            <Card className="w-full animate-in fade-in-50 border-accent border-2">
                 <CardHeader>
-                    <CardTitle className="font-headline text-2xl text-primary">
-                        Your AI-Generated Strategy
+                    <CardTitle className="font-headline text-2xl text-accent">
+                        The Oracle's Prophecy
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-6">
+                <CardContent className="space-y-6 font-body text-lg">
                     <div>
-                        <h3 className="font-semibold font-headline text-lg mb-2">Recommended Strategy</h3>
+                        <h3 className="font-semibold font-headline text-xl mb-2">Strategy</h3>
                         <p className="text-muted-foreground">{result.strategy}</p>
                     </div>
                     <div>
-                        <h3 className="font-semibold font-headline text-lg mb-2">Explanation</h3>
+                        <h3 className="font-semibold font-headline text-xl mb-2">Explanation</h3>
                         <p className="text-muted-foreground whitespace-pre-wrap">{result.explanation}</p>
                     </div>
                 </CardContent>

@@ -25,18 +25,18 @@ export function UserNav() {
         <DropdownMenu>
         <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-            <Avatar className="h-9 w-9">
+            <Avatar className="h-10 w-10 border-2 border-primary">
                 <AvatarImage src="https://picsum.photos/seed/myavatar/48/48" alt="@shadcn" />
-                <AvatarFallback>AT</AvatarFallback>
+                <AvatarFallback>DC</AvatarFallback>
             </Avatar>
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuContent className="w-56 font-body" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Tycoon</p>
+                <p className="text-sm font-medium leading-none">Player One</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                tycoon@example.com
+                player.one@dreamcoin.com
                 </p>
             </div>
             </DropdownMenuLabel>
