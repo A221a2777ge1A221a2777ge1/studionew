@@ -33,20 +33,20 @@ export function AuthForm() {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <Card className="border-primary border-2 shadow-lg shadow-primary/20">
+    <div className="w-full max-w-sm mx-auto">
+      <Card className="border-primary/50 border-2 shadow-lg shadow-primary/20 bg-card/80 backdrop-blur-sm">
         <CardHeader className="text-center">
-          <CardTitle className="font-headline text-2xl text-accent">START GAME</CardTitle>
-          <CardDescription className="font-body text-lg">
+          <CardTitle className="font-bold text-2xl text-accent">START GAME</CardTitle>
+          <CardDescription>
             Connect your wallet to begin.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-            <Button size="lg" className="w-full font-body text-lg" onClick={handleAuthAction}>
+            <Button size="lg" className="w-full text-base" onClick={handleAuthAction}>
                 <GoogleIcon className="mr-2 h-5 w-5 fill-current" />
                 Continue with Google
             </Button>
-            <Button size="lg" className="w-full font-body text-lg" onClick={handleAuthAction}>
+            <Button size="lg" className="w-full text-base" onClick={handleAuthAction}>
                 <MetaMaskIcon className="mr-2 h-5 w-5" />
                 Continue with MetaMask
             </Button>

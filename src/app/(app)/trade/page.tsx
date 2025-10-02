@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ArrowDown, ArrowRightLeft, Settings, Info, Loader2 } from "lucide-react";
+import { ArrowDown, Settings, Info, Loader2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -21,13 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-
-const TokenIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 5 L95 40 L80 95 L20 95 L5 40 Z" fill="hsl(var(--primary))" />
-        <text x="50" y="68" fontFamily='"Press Start 2P"' fontWeight="bold" fontSize="50" fill="hsl(var(--primary-foreground))" textAnchor="middle">D</text>
-    </svg>
-);
+import { Logo } from "@/components/logo";
+import { cn } from "@/lib/utils";
 
 const BnbIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -54,13 +49,19 @@ export default function TradePage() {
 
   useEffect(() => {
     if (fromAmount) {
-      setToAmount((parseFloat(fromAmount) / price).toFixed(4));
+      const val = parseFloat(fromAmount);
+      if (!isNaN(val)) {
+        setToAmount((val / price).toFixed(4));
+      } else {
+        setToAmount("");
+      }
     } else {
       setToAmount("");
     }
   }, [fromAmount, price]);
 
   const handleSwap = () => {
+    if(!fromAmount || !toAmount) return;
     setIsSwapping(true);
     // Simulate transaction
     setTimeout(() => {
@@ -70,79 +71,82 @@ export default function TradePage() {
         description: `You swapped ${fromAmount} BNB for ${toAmount} DREAM.`,
         variant: "default",
       });
-    }, 2000);
+    }, 1500);
   };
 
   return (
-    <div className="container py-8 flex justify-center">
-      <Card className="w-full max-w-md border-primary border-2">
+    <div className="container py-8 flex justify-center items-start">
+      <Card className="w-full max-w-md border-primary/50 border-2 shadow-lg shadow-primary/10">
         <CardHeader>
-          <CardTitle className="font-headline flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <ArrowRightLeft className="h-5 w-5"/>
-                Swap
-            </div>
+          <CardTitle className="flex items-center justify-between">
+            Swap Tokens
             <Settings className="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
           </CardTitle>
-          <CardDescription className="font-body text-base">
+          <CardDescription>
             Trade your tokens seamlessly and securely.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 font-body text-lg">
+        <CardContent className="space-y-4">
           <div className="p-4 rounded-md border bg-muted/30 space-y-2">
-            <Label htmlFor="fromAmount">From</Label>
+            <div className="flex justify-between items-center">
+                <Label htmlFor="fromAmount">From</Label>
+                <div className="text-sm text-muted-foreground">Balance: 12.5 BNB</div>
+            </div>
             <div className="flex items-center gap-2">
               <Input
                 id="fromAmount"
                 type="number"
                 value={fromAmount}
                 onChange={(e) => setFromAmount(e.target.value)}
-                className="text-xl font-mono"
+                className="text-xl font-mono !text-right"
+                placeholder="0.0"
               />
-              <Button variant="outline" className="flex-shrink-0 font-body text-base">
-                <BnbIcon className="h-5 w-5 mr-2" />
+              <Button variant="outline" className="flex-shrink-0 text-base">
+                <BnbIcon className="h-6 w-6 mr-2" />
                 BNB
               </Button>
             </div>
-            <div className="text-sm text-muted-foreground text-right">Balance: 12.5 BNB</div>
           </div>
           
-          <div className="relative flex justify-center">
-             <Button variant="outline" size="icon" className="h-10 w-10 rounded-full z-10 bg-background">
+          <div className="relative flex justify-center my-2">
+             <Button variant="outline" size="icon" className="h-10 w-10 rounded-full z-10 bg-background border-2">
                 <ArrowDown />
              </Button>
           </div>
 
-          <div className="p-4 rounded-md border bg-muted/30 space-y-2 -mt-7 pt-9">
-            <Label htmlFor="toAmount">To</Label>
+          <div className="p-4 rounded-md border bg-muted/30 space-y-2">
+             <div className="flex justify-between items-center">
+                <Label htmlFor="toAmount">To</Label>
+                <div className="text-sm text-muted-foreground">Balance: 50,000</div>
+            </div>
             <div className="flex items-center gap-2">
               <Input
                 id="toAmount"
                 type="number"
                 value={toAmount}
                 readOnly
-                className="text-xl font-mono"
+                className="text-xl font-mono !text-right"
+                placeholder="0.0"
               />
-              <Button variant="outline" className="flex-shrink-0 font-body text-base">
-                <TokenIcon className="h-5 w-5 mr-2" />
+              <Button variant="outline" className="flex-shrink-0 text-base">
+                <Logo className="h-6 w-6 mr-2" />
                 DREAM
               </Button>
             </div>
-             <div className="text-xs text-muted-foreground text-right">Balance: 50,000 DREAM</div>
           </div>
 
-          <div className="text-base text-muted-foreground flex justify-between items-center">
+          <div className="text-sm text-muted-foreground flex justify-between items-center pt-2">
             <span>Price</span>
             <span className="font-mono">1 DREAM ≈ {price.toFixed(5)} BNB</span>
           </div>
 
-           <div className="flex items-center gap-4">
-            <Label>Slippage</Label>
+           <div className="flex items-center justify-between text-sm">
+            <Label className="text-muted-foreground">Slippage Tolerance</Label>
             <Select value={slippage} onValueChange={setSlippage}>
-                <SelectTrigger className="w-[100px] font-body text-base">
+                <SelectTrigger className="w-auto h-auto px-2 py-1 text-sm bg-transparent border-none focus:ring-0">
                     <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="font-body text-base">
+                <SelectContent>
                     <SelectItem value="0.1">0.1%</SelectItem>
                     <SelectItem value="0.5">0.5%</SelectItem>
                     <SelectItem value="1">1.0%</SelectItem>
@@ -151,12 +155,12 @@ export default function TradePage() {
            </div>
         </CardContent>
         <CardFooter className="flex-col gap-2">
-          <Button size="lg" className="w-full font-headline text-lg" onClick={handleSwap} disabled={isSwapping}>
+          <Button size="lg" className="w-full text-lg" onClick={handleSwap} disabled={isSwapping || !fromAmount || !toAmount}>
             {isSwapping ? <Loader2 className="h-5 w-5 animate-spin" /> : "Swap Tokens"}
           </Button>
-          <div className="flex items-center text-xs text-muted-foreground gap-1 font-body">
+          <div className="flex items-center text-xs text-muted-foreground gap-1">
             <Info className="h-3 w-3" />
-            <span>Transactions are simulated.</span>
+            <span>Transactions are simulated for demo purposes.</span>
           </div>
         </CardFooter>
       </Card>

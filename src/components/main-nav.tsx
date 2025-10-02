@@ -4,14 +4,13 @@ import Link from "next/link"
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils"
-import { Button } from "./ui/button";
-import { LayoutDashboard, ArrowRightLeft, Trophy, Award, BrainCircuit } from "lucide-react";
+import { BrainCircuit, Compass, LayoutDashboard, ShieldCheck, Trophy } from "lucide-react";
 
 export const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/trade", label: "Trade", icon: ArrowRightLeft },
+    { href: "/trade", label: "Trade", icon: Compass },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-    { href: "/achievements", label: "Quests", icon: Award },
+    { href: "/achievements", label: "Quests", icon: ShieldCheck },
     { href: "/invest", label: "AI Oracle", icon: BrainCircuit },
 ]
 
@@ -31,8 +30,8 @@ export function MainNav({
                 key={link.href}
                 href={link.href}
                 className={cn(
-                    "text-lg font-body transition-colors hover:text-primary",
-                    pathname === link.href ? "text-primary" : "text-muted-foreground"
+                    "text-sm font-medium transition-colors hover:text-primary",
+                    pathname.startsWith(link.href) ? "text-primary" : "text-muted-foreground"
                 )}
             >
                 {link.label}

@@ -10,9 +10,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        body: ['"VT323"', 'monospace'],
-        headline: ['"Press Start 2P"', 'cursive'],
-        code: ['monospace'],
+        sans: ['var(--font-geist-sans)'],
+        mono: ['var(--font-geist-mono)'],
       },
       colors: {
         border: 'hsl(var(--border))',

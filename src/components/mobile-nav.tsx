@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import Link, { type LinkProps } from "next/link"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,6 +14,7 @@ import { Logo } from "./logo"
 
 export function MobileNav() {
   const [open, setOpen] = React.useState(false)
+  const pathname = usePathname()
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -33,17 +34,19 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
         >
             <Logo className="h-8 w-8 mr-2" />
-            <span className="font-bold font-headline text-lg text-primary">Dreamcoin</span>
+            <span className="font-bold text-lg text-primary">Dreamcoin</span>
         </Link>
         <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
-          <div className="flex flex-col space-y-3">
+          <div className="flex flex-col space-y-2">
             {navLinks.map(
               (item) =>
                 item.href && (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="font-body text-xl text-muted-foreground transition-colors hover:text-primary"
+                    className={cn("text-lg transition-colors hover:text-primary",
+                       pathname.startsWith(item.href) ? "text-primary" : "text-muted-foreground"
+                    )}
                     onClick={() => setOpen(false)}
                   >
                     {item.label}
