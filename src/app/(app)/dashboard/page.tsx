@@ -1,7 +1,6 @@
 import {
   ArrowRightLeft,
   Banknote,
-  TrendingUp,
   Trophy,
   Wallet,
 } from "lucide-react";
@@ -62,11 +61,6 @@ export default function DashboardPage() {
                 <Link href="/trade">
                     <ArrowRightLeft className="mr-2 h-4 w-4" /> Buy / Sell
                 </Link>
-            </Button>
-            <Button asChild variant="secondary" size="lg" className="text-base">
-                 <Link href="/invest">
-                    <TrendingUp className="mr-2 h-4 w-4" /> AI Oracle
-                 </Link>
             </Button>
           </CardContent>
         </Card>

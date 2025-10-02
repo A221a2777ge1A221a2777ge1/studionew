@@ -2,7 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { achievementsData } from "@/lib/data";
 import { cn } from "@/lib/utils";
-import { Award, Lock, Diamond, Bot, TrendingUp, Trophy, Zap, ShieldCheck } from "lucide-react";
+import { Award, Lock, Diamond, TrendingUp, Trophy, Zap, ShieldCheck } from "lucide-react";
 import React from "react";
 
 const iconMap: { [key: string]: React.ComponentType<{className?: string}> } = {
@@ -11,7 +11,6 @@ const iconMap: { [key: string]: React.ComponentType<{className?: string}> } = {
     PaperChaser: TrendingUp,
     PortfolioPro: TrendingUp,
     TopTycoon: Trophy,
-    MarketGuru: Bot,
 };
 
 export default function AchievementsPage() {
