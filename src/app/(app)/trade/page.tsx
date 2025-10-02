@@ -13,13 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ArrowDown, Settings, Info, Loader2 } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
@@ -141,17 +134,18 @@ export default function TradePage() {
           </div>
 
            <div className="flex items-center justify-between text-sm">
-            <Label className="text-muted-foreground">Slippage Tolerance</Label>
-            <Select value={slippage} onValueChange={setSlippage}>
-                <SelectTrigger className="w-auto h-auto px-2 py-1 text-sm bg-transparent border-none focus:ring-0">
-                    <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="0.1">0.1%</SelectItem>
-                    <SelectItem value="0.5">0.5%</SelectItem>
-                    <SelectItem value="1">1.0%</SelectItem>
-                </SelectContent>
-            </Select>
+            <Label htmlFor="slippage" className="text-muted-foreground">Slippage Tolerance</Label>
+            <div className="flex items-center gap-1">
+              <Input 
+                id="slippage"
+                type="number"
+                value={slippage}
+                onChange={(e) => setSlippage(e.target.value)}
+                className="w-20 h-auto px-2 py-1 text-sm text-right bg-transparent border-input"
+                placeholder="0.5"
+              />
+              <span>%</span>
+            </div>
            </div>
         </CardContent>
         <CardFooter className="flex-col gap-2">
