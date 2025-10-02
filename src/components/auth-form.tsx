@@ -1,18 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -39,88 +34,24 @@ export function AuthForm() {
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <Tabs defaultValue="login" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 bg-card">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="register">Register</TabsTrigger>
-        </TabsList>
-        <TabsContent value="login">
-          <Card className="border-t-0 rounded-t-none">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">Welcome Back, Tycoon</CardTitle>
-              <CardDescription>
-                Enter your credentials to access your empire.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="kofi@tycoon.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" />
-              </div>
-            </CardContent>
-            <CardFooter className="flex-col gap-4">
-              <Button className="w-full" onClick={handleAuthAction}>
-                Login
-              </Button>
-              <p className="text-xs text-muted-foreground">Or continue with</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                  <Button variant="outline" className="w-full">
-                      <GoogleIcon className="mr-2 h-5 w-5 fill-current" />
-                      Google
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                      <MetaMaskIcon className="mr-2 h-5 w-5" />
-                      MetaMask
-                  </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-        <TabsContent value="register">
-          <Card className="border-t-0 rounded-t-none">
-            <CardHeader>
-              <CardTitle className="font-headline text-2xl">Join the Elite</CardTitle>
-              <CardDescription>
-                Create your account to start building your fortune.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="reg-username">Username</Label>
-                <Input id="reg-username" placeholder="Kofi.eth" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reg-email">Email</Label>
-                <Input id="reg-email" type="email" placeholder="kofi@tycoon.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="reg-password">Password</Label>
-                <Input id="reg-password" type="password" />
-              </div>
-            </CardContent>
-            <CardFooter className="flex-col gap-4">
-              <Button className="w-full" onClick={handleAuthAction}>
-                Register
-              </Button>
-               <p className="text-xs text-muted-foreground">Or continue with</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                  <Button variant="outline" className="w-full">
-                      <GoogleIcon className="mr-2 h-5 w-5 fill-current" />
-                      Google
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                      <MetaMaskIcon className="mr-2 h-5 w-5" />
-                      MetaMask
-                  </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardHeader className="text-center">
+          <CardTitle className="font-headline text-2xl">Join the Elite</CardTitle>
+          <CardDescription>
+            Connect your wallet to start building your fortune.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+            <Button variant="outline" className="w-full" onClick={handleAuthAction}>
+                <GoogleIcon className="mr-2 h-5 w-5 fill-current" />
+                Continue with Google
+            </Button>
+            <Button variant="outline" className="w-full" onClick={handleAuthAction}>
+                <MetaMaskIcon className="mr-2 h-5 w-5" />
+                Continue with MetaMask
+            </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
