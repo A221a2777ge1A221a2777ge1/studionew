@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { User, Wallet, Bell, Shield, LogOut } from "lucide-react";
+import { User, Wallet, Bell, Shield, LogOut, Gift, Users, Trophy, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 
 export default function ProfilePage() {
+  const totalRewards = 12500;
   return (
     <div className="container py-8">
        <h1 className="text-3xl font-bold mb-6">Profile & Settings</h1>
@@ -21,6 +23,9 @@ export default function ProfilePage() {
                         <Button variant="ghost" className="justify-start gap-3 px-3 text-left"><Wallet className="h-5 w-5" /> Wallet</Button>
                         <Button variant="ghost" className="justify-start gap-3 px-3 text-left"><Bell className="h-5 w-5" /> Notifications</Button>
                         <Button variant="ghost" className="justify-start gap-3 px-3 text-left"><Shield className="h-5 w-5" /> Security</Button>
+                        <Link href="/referrals" passHref>
+                          <Button variant="ghost" className="justify-start gap-3 px-3 text-left w-full"><Users className="h-5 w-5" /> Referrals</Button>
+                        </Link>
                         <Separator className="my-1"/>
                         <Link href="/" className="w-full">
                           <Button variant="ghost" className="justify-start gap-3 px-3 w-full text-destructive hover:text-destructive">
@@ -32,6 +37,43 @@ export default function ProfilePage() {
             </Card>
         </div>
         <div className="lg:col-span-3">
+            <Card className="mb-8 border-accent/50 border-2 shadow-lg shadow-accent/10">
+                <CardHeader>
+                    <div className="flex items-center gap-3">
+                        <Gift className="h-6 w-6 text-accent"/>
+                        <CardTitle>My Rewards</CardTitle>
+                    </div>
+                    <CardDescription>DREAM tokens earned from achievements and referrals.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                   <div className="flex items-center gap-4">
+                        <Logo className="h-12 w-12"/>
+                        <div>
+                            <p className="text-4xl font-bold text-accent">{totalRewards.toLocaleString()}</p>
+                            <p className="text-muted-foreground">Total Claimable DREAM</p>
+                        </div>
+                   </div>
+                   <Button size="lg" className="w-full sm:w-auto bg-accent text-accent-foreground hover:bg-accent/90">
+                       <Sparkles className="mr-2 h-5 w-5"/> Claim Rewards
+                   </Button>
+                </CardContent>
+                <CardContent className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center gap-2 p-3 rounded-md bg-muted">
+                        <Trophy className="h-5 w-5 text-primary"/>
+                        <div>
+                            <p className="font-semibold">From Achievements</p>
+                            <p>1,250 DREAM</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-md bg-muted">
+                        <Users className="h-5 w-5 text-primary"/>
+                        <div>
+                            <p className="font-semibold">From Referrals</p>
+                            <p>11,250 DREAM</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
             <Card>
                 <CardHeader>
                     <CardTitle>Public Profile</CardTitle>

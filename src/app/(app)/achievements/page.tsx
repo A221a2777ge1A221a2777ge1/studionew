@@ -2,15 +2,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { achievementsData } from "@/lib/data";
 import { cn } from "@/lib/utils";
-import { Award, Lock, Diamond, TrendingUp, Trophy, Zap, ShieldCheck } from "lucide-react";
+import { Award, Lock, Diamond, TrendingUp, Trophy, Zap, ShieldCheck, Gem, Rocket, Star, Crown, Landmark } from "lucide-react";
 import React from "react";
 
 const iconMap: { [key: string]: React.ComponentType<{className?: string}> } = {
     FirstTrade: Zap,
-    DiamondHands: Diamond,
+    DiamondHands: Gem, // Changed from Diamond
     PaperChaser: TrendingUp,
-    PortfolioPro: TrendingUp,
+    PortfolioPro: Rocket, // Changed from TrendingUp
     TopTycoon: Trophy,
+    IronGrip: ShieldCheck,
+    Unshakeable: Landmark,
+    Millionaire: Star,
+    CoinHoarder: Crown,
 };
 
 export default function AchievementsPage() {
@@ -18,15 +22,15 @@ export default function AchievementsPage() {
     <div className="container py-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
         <div className="flex items-center gap-4">
-            <ShieldCheck className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Quests</h1>
+            <Trophy className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl font-bold">Achievements</h1>
         </div>
         <p className="text-muted-foreground mt-2 sm:mt-0 text-lg">
-            Complete quests to earn DREAM tokens and level up!
+            Complete achievements to earn DREAM tokens and level up!
         </p>
       </div>
 
-      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {achievementsData.map((achievement) => {
             const Icon = iconMap[achievement.icon] || Award;
             const isLocked = achievement.status === 'locked';
@@ -38,7 +42,7 @@ export default function AchievementsPage() {
               </div>
               <div>
                 <CardTitle className={cn("text-lg font-semibold", isLocked && "text-muted-foreground")}>{achievement.title}</CardTitle>
-                <CardDescription className={cn("text-base", isLocked ? "text-muted-foreground/70" : "text-accent")}>Reward: {achievement.reward} DREAM</CardDescription>
+                <CardDescription className={cn("text-base", isLocked ? "text-muted-foreground/70" : "text-accent")}>Reward: {achievement.reward.toLocaleString()} DREAM</CardDescription>
               </div>
             </CardHeader>
             <CardContent className="flex-1 flex flex-col justify-between gap-4">

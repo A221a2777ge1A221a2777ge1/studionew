@@ -4,13 +4,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils"
-import { Compass, LayoutDashboard, ShieldCheck, Trophy } from "lucide-react";
+import { Compass, LayoutDashboard, ShieldCheck, Trophy, Users } from "lucide-react";
 
 export const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/trade", label: "Trade", icon: Compass },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
-    { href: "/achievements", label: "Quests", icon: ShieldCheck },
+    { href: "/achievements", label: "Achievements", icon: ShieldCheck },
+    { href: "/referrals", label: "Referrals", icon: Users },
 ]
 
 export function MainNav({
