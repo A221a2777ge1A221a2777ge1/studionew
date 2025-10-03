@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { 
   signInWithPopup, 
   signInWithEmailAndPassword, 
@@ -10,7 +11,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
-import { createMCPContext, emitMCPEvent } from './mcp-pattern';
+import { mcpManager, createMCPContext, emitMCPEvent } from './mcp-pattern';
 
 export interface UserProfile {
   uid: string;
@@ -37,20 +38,19 @@ export class AuthService {
   private googleProvider = new GoogleAuthProvider();
 
   constructor() {
-    // Configure Google provider
     this.googleProvider.addScope('email');
     this.googleProvider.addScope('profile');
   }
 
   async signInWithGoogle(): Promise<UserProfile> {
     try {
-      const result: UserCredential = await signInWithPopup(auth, this.googleProvider);
+      const result = await signInWithPopup(auth, this.googleProvider);
       const user = result.user;
       
-      // Create or update user profile
+      mcpManager.setContext(createMCPContext(user.uid));
+      
       const userProfile = await this.createOrUpdateUserProfile(user);
       
-      // Emit MCP event
       await emitMCPEvent('user_authenticated', {
         method: 'google',
         userId: user.uid,
@@ -66,8 +66,10 @@ export class AuthService {
 
   async signInWithEmail(email: string, password: string): Promise<UserProfile> {
     try {
-      const result: UserCredential = await signInWithEmailAndPassword(auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
       const user = result.user;
+
+      mcpManager.setContext(createMCPContext(user.uid));
       
       const userProfile = await this.createOrUpdateUserProfile(user);
       
@@ -86,10 +88,11 @@ export class AuthService {
 
   async signUpWithEmail(email: string, password: string, displayName: string): Promise<UserProfile> {
     try {
-      const result: UserCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
       const user = result.user;
+
+      mcpManager.setContext(createMCPContext(user.uid));
       
-      // Update display name
       if (user && 'updateProfile' in user) {
         await (user as any).updateProfile({ displayName });
       }
@@ -115,18 +118,12 @@ export class AuthService {
         throw new Error('MetaMask not detected');
       }
 
-      // Request account access
-      const accounts = await (window as any).ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      });
-      
-      if (accounts.length === 0) {
-        throw new Error('No accounts found');
-      }
-
+      const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
       const walletAddress = accounts[0];
-      
-      // Create anonymous user profile for MetaMask
+      const uid = `metamask_${walletAddress}`;
+
+      mcpManager.setContext(createMCPContext(uid));
+
       const userProfile = await this.createMetaMaskUserProfile(walletAddress);
       
       await emitMCPEvent('user_authenticated', {
@@ -144,10 +141,16 @@ export class AuthService {
 
   async signOut(): Promise<void> {
     try {
-      await signOut(auth);
       await emitMCPEvent('user_signed_out', {});
+      await signOut(auth);
+      mcpManager.setContext(null);
     } catch (error) {
       console.error('Sign-out error:', error);
+      // Still try to sign out if event emission fails
+      if (auth.currentUser) {
+        await signOut(auth);
+        mcpManager.setContext(null);
+      }
       throw error;
     }
   }
@@ -164,69 +167,23 @@ export class AuthService {
   async getUserProfile(uid: string): Promise<UserProfile | null> {
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
-      if (userDoc.exists()) {
-        return userDoc.data() as UserProfile;
-      }
-      return null;
+      return userDoc.exists() ? userDoc.data() as UserProfile : null;
     } catch (error) {
       console.error('Error getting user profile:', error);
       return null;
     }
   }
 
-  async updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
-    try {
-      const userRef = doc(db, 'users', uid);
-      await updateDoc(userRef, {
-        ...updates,
-        lastUpdated: Date.now(),
-      });
-      
-      await emitMCPEvent('user_profile_updated', {
-        userId: uid,
-        updates,
-      });
-    } catch (error) {
-      console.error('Error updating user profile:', error);
-      throw error;
-    }
-  }
-
-  async linkWalletAddress(uid: string, walletAddress: string): Promise<void> {
-    try {
-      await this.updateUserProfile(uid, { walletAddress });
-      
-      await emitMCPEvent('wallet_linked', {
-        userId: uid,
-        walletAddress,
-      });
-    } catch (error) {
-      console.error('Error linking wallet:', error);
-      throw error;
-    }
-  }
-
   private async createOrUpdateUserProfile(user: User): Promise<UserProfile> {
     const userRef = doc(db, 'users', user.uid);
     const userDoc = await getDoc(userRef);
-    
     const now = Date.now();
     
     if (userDoc.exists()) {
-      // Update existing user
-      const existingProfile = userDoc.data() as UserProfile;
-      const updatedProfile: UserProfile = {
-        ...existingProfile,
-        email: user.email || existingProfile.email,
-        displayName: user.displayName || existingProfile.displayName,
-        photoURL: user.photoURL || existingProfile.photoURL,
-        lastLogin: now,
-      };
-      
-      await setDoc(userRef, updatedProfile);
-      return updatedProfile;
+      const updatedProfile = { lastLogin: now };
+      await updateDoc(userRef, updatedProfile);
+      return { ...userDoc.data(), ...updatedProfile } as UserProfile;
     } else {
-      // Create new user profile
       const newProfile: UserProfile = {
         uid: user.uid,
         email: user.email || '',
@@ -239,13 +196,8 @@ export class AuthService {
         achievements: [],
         createdAt: now,
         lastLogin: now,
-        preferences: {
-          theme: 'dark',
-          notifications: true,
-          language: 'en',
-        },
+        preferences: { theme: 'dark', notifications: true, language: 'en' },
       };
-      
       await setDoc(userRef, newProfile);
       return newProfile;
     }
@@ -255,21 +207,13 @@ export class AuthService {
     const uid = `metamask_${walletAddress}`;
     const userRef = doc(db, 'users', uid);
     const userDoc = await getDoc(userRef);
-    
     const now = Date.now();
-    
+
     if (userDoc.exists()) {
-      // Update existing MetaMask user
-      const existingProfile = userDoc.data() as UserProfile;
-      const updatedProfile: UserProfile = {
-        ...existingProfile,
-        lastLogin: now,
-      };
-      
-      await setDoc(userRef, updatedProfile);
-      return updatedProfile;
+      const updatedProfile = { lastLogin: now };
+      await updateDoc(userRef, updatedProfile);
+      return { ...userDoc.data(), ...updatedProfile } as UserProfile;
     } else {
-      // Create new MetaMask user profile
       const newProfile: UserProfile = {
         uid,
         email: '',
@@ -282,23 +226,16 @@ export class AuthService {
         achievements: [],
         createdAt: now,
         lastLogin: now,
-        preferences: {
-          theme: 'dark',
-          notifications: true,
-          language: 'en',
-        },
+        preferences: { theme: 'dark', notifications: true, language: 'en' },
       };
-      
       await setDoc(userRef, newProfile);
       return newProfile;
     }
   }
 }
 
-// Global auth service instance
 export const authService = new AuthService();
 
-// Auth state management hook
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -307,17 +244,20 @@ export const useAuth = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
-      
       if (user) {
+        if (!mcpManager.getContext()) {
+          mcpManager.setContext(createMCPContext(user.uid));
+        }
         const profile = await authService.getUserProfile(user.uid);
         setUserProfile(profile);
       } else {
+        if (mcpManager.getContext()) {
+          mcpManager.setContext(null);
+        }
         setUserProfile(null);
       }
-      
       setLoading(false);
     });
-
     return () => unsubscribe();
   }, []);
 
@@ -330,10 +270,5 @@ export const useAuth = () => {
     signUpWithEmail: authService.signUpWithEmail.bind(authService),
     signInWithMetaMask: authService.signInWithMetaMask.bind(authService),
     signOut: authService.signOut.bind(authService),
-    updateUserProfile: authService.updateUserProfile.bind(authService),
-    linkWalletAddress: authService.linkWalletAddress.bind(authService),
   };
 };
-
-// Import React hooks
-import { useState, useEffect } from 'react';
