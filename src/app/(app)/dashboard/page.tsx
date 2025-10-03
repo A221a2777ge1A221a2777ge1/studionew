@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
-import { web3Provider, formatBalance, formatAddress } from "@/lib/web3";
+import { useWeb3, formatBalance, formatAddress } from "@/hooks/useWeb3";
 import { emitMCPEvent } from "@/lib/mcp-pattern";
 import { 
   Wallet, 
@@ -42,23 +42,31 @@ interface LeaderboardEntry {
 
 export default function Dashboard() {
   const { userProfile } = useAuth();
+  const { 
+    isConnected, 
+    account, 
+    balance, 
+    connect, 
+    disconnect, 
+    isConnecting,
+    getTokenBalance,
+    isCorrectNetwork 
+  } = useWeb3();
   const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [walletConnected, setWalletConnected] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
-  }, [userProfile]);
+  }, [userProfile, isConnected, account]);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       
       // Load wallet balance if wallet is connected
-      if (userProfile?.walletAddress) {
+      if (isConnected && account) {
         await loadWalletBalance();
-        setWalletConnected(true);
       }
 
       // Load leaderboard data
@@ -67,7 +75,7 @@ export default function Dashboard() {
       // Emit MCP event
       await emitMCPEvent('dashboard_loaded', {
         userId: userProfile?.uid,
-        walletConnected: !!userProfile?.walletAddress,
+        walletConnected: isConnected,
       });
 
     } catch (error) {
@@ -78,10 +86,10 @@ export default function Dashboard() {
   };
 
   const loadWalletBalance = async () => {
-    if (!userProfile?.walletAddress) return;
+    if (!account) return;
 
     try {
-      const bnbBalance = await web3Provider.getBalance(userProfile.walletAddress);
+      const bnbBalance = balance;
       
       // Mock token balances for demo
       const mockTokens = [
@@ -115,22 +123,6 @@ export default function Dashboard() {
     setLeaderboard(mockLeaderboard);
   };
 
-  const connectWallet = async () => {
-    try {
-      const address = await web3Provider.connect();
-      // Update user profile with wallet address
-      // This would typically be handled by the auth service
-      setWalletConnected(true);
-      await loadWalletBalance();
-      
-      await emitMCPEvent('wallet_connected', {
-        userId: userProfile?.uid,
-        walletAddress: address,
-      });
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
-    }
-  };
 
   if (loading) {
     return (
@@ -253,10 +245,25 @@ export default function Dashboard() {
                     View Achievements
                   </a>
                 </Button>
-                {!walletConnected && (
-                  <Button variant="outline" className="w-full" onClick={connectWallet}>
+                {!isConnected && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={connect}
+                    disabled={isConnecting}
+                  >
                     <Wallet className="w-4 h-4 mr-2" />
-                    Connect Wallet
+                    {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                  </Button>
+                )}
+                {isConnected && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full" 
+                    onClick={disconnect}
+                  >
+                    <Wallet className="w-4 h-4 mr-2" />
+                    Disconnect Wallet
                   </Button>
                 )}
               </CardContent>
@@ -298,13 +305,13 @@ export default function Dashboard() {
         </TabsContent>
 
         <TabsContent value="wallet" className="space-y-4">
-          {walletConnected && walletBalance ? (
+          {isConnected && walletBalance ? (
             <div className="space-y-4">
               <Card className="tribal-pattern">
                 <CardHeader>
                   <CardTitle>Wallet Balance</CardTitle>
                   <CardDescription>
-                    Connected: {formatAddress(userProfile?.walletAddress || '')}
+                    Connected: {formatAddress(account || '')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -362,9 +369,13 @@ export default function Dashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Button onClick={connectWallet} className="w-full bg-gradient-african hover:shadow-african">
+                <Button 
+                  onClick={connect} 
+                  className="w-full bg-gradient-african hover:shadow-african"
+                  disabled={isConnecting}
+                >
                   <Wallet className="w-4 h-4 mr-2" />
-                  Connect Wallet
+                  {isConnecting ? 'Connecting...' : 'Connect Wallet'}
                 </Button>
               </CardContent>
             </Card>

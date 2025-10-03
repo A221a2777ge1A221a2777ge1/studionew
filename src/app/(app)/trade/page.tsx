@@ -10,7 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
-import { web3Provider, formatBalance, calculateSlippage } from "@/lib/web3";
+import { useWeb3, formatBalance, calculateSlippage } from "@/hooks/useWeb3";
 import { emitMCPEvent } from "@/lib/mcp-pattern";
 import { 
   ArrowUpDown, 
@@ -82,6 +82,17 @@ const SUPPORTED_TOKENS: Token[] = [
 
 export default function TradePage() {
   const { userProfile } = useAuth();
+  const { 
+    isConnected, 
+    account, 
+    connect, 
+    disconnect, 
+    isConnecting,
+    getTokenBalance,
+    getTokenPrice,
+    swapTokens,
+    isCorrectNetwork
+  } = useWeb3();
   const [selectedTokenIn, setSelectedTokenIn] = useState<Token>(SUPPORTED_TOKENS[0]);
   const [selectedTokenOut, setSelectedTokenOut] = useState<Token>(SUPPORTED_TOKENS[1]);
   const [amountIn, setAmountIn] = useState("");
@@ -89,17 +100,15 @@ export default function TradePage() {
   const [slippage, setSlippage] = useState([0.5]);
   const [loading, setLoading] = useState(false);
   const [trading, setTrading] = useState(false);
-  const [walletConnected, setWalletConnected] = useState(false);
   const [walletBalance, setWalletBalance] = useState<string>("0");
   const [priceImpact, setPriceImpact] = useState(0);
   const [minimumReceived, setMinimumReceived] = useState("0");
 
   useEffect(() => {
-    if (userProfile?.walletAddress) {
-      setWalletConnected(true);
+    if (isConnected && account) {
       loadWalletBalance();
     }
-  }, [userProfile]);
+  }, [isConnected, account]);
 
   useEffect(() => {
     if (amountIn && selectedTokenIn && selectedTokenOut) {
@@ -108,11 +117,12 @@ export default function TradePage() {
   }, [amountIn, selectedTokenIn, selectedTokenOut, slippage]);
 
   const loadWalletBalance = async () => {
-    if (!userProfile?.walletAddress) return;
+    if (!account) return;
 
     try {
-      const balance = await web3Provider.getBalance(userProfile.walletAddress);
-      setWalletBalance(balance);
+      // Get BNB balance from Web3 hook
+      const bnbBalance = await getTokenBalance('0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c'); // WBNB
+      setWalletBalance(bnbBalance);
     } catch (error) {
       console.error('Error loading wallet balance:', error);
     }
@@ -141,8 +151,8 @@ export default function TradePage() {
     }
   };
 
-  const swapTokens = async () => {
-    if (!userProfile?.walletAddress || !amountIn || !amountOut) return;
+  const executeSwap = async () => {
+    if (!isConnected || !account || !amountIn || !amountOut) return;
 
     try {
       setTrading(true);
@@ -157,18 +167,24 @@ export default function TradePage() {
 
       // Emit MCP event for trade attempt
       await emitMCPEvent('trade_attempted', {
-        userId: userProfile.uid,
+        userId: userProfile?.uid,
         tradeParams,
       });
 
-      // Execute trade (mock for demo)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Execute actual trade using Web3 hook
+      const txHash = await swapTokens(
+        selectedTokenIn.address,
+        selectedTokenOut.address,
+        amountIn,
+        minimumReceived,
+        slippage[0]
+      );
       
       // Emit MCP event for successful trade
       await emitMCPEvent('trade_executed', {
-        userId: userProfile.uid,
+        userId: userProfile?.uid,
         tradeParams,
-        txHash: '0x' + Math.random().toString(16).substr(2, 64),
+        txHash,
       });
 
       // Reset form
@@ -183,7 +199,7 @@ export default function TradePage() {
       
       // Emit MCP event for failed trade
       await emitMCPEvent('trade_failed', {
-        userId: userProfile.uid,
+        userId: userProfile?.uid,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     } finally {
@@ -191,20 +207,6 @@ export default function TradePage() {
     }
   };
 
-  const connectWallet = async () => {
-    try {
-      const address = await web3Provider.connect();
-      setWalletConnected(true);
-      await loadWalletBalance();
-      
-      await emitMCPEvent('wallet_connected', {
-        userId: userProfile?.uid,
-        walletAddress: address,
-      });
-    } catch (error) {
-      console.error('Error connecting wallet:', error);
-    }
-  };
 
   const switchTokens = () => {
     const temp = selectedTokenIn;
@@ -233,10 +235,14 @@ export default function TradePage() {
             Swap tokens on PancakeSwap with the best rates
           </p>
         </div>
-        {!walletConnected && (
-          <Button onClick={connectWallet} className="bg-gradient-african hover:shadow-african">
+        {!isConnected && (
+          <Button 
+            onClick={connect} 
+            className="bg-gradient-african hover:shadow-african"
+            disabled={isConnecting}
+          >
             <Wallet className="w-4 h-4 mr-2" />
-            Connect Wallet
+            {isConnecting ? 'Connecting...' : 'Connect Wallet'}
           </Button>
         )}
       </div>
@@ -357,8 +363,8 @@ export default function TradePage() {
 
               {/* Trade Button */}
               <Button
-                onClick={swapTokens}
-                disabled={!walletConnected || !amountIn || !amountOut || trading}
+                onClick={executeSwap}
+                disabled={!isConnected || !amountIn || !amountOut || trading}
                 className="w-full bg-gradient-african hover:shadow-african"
                 size="lg"
               >
