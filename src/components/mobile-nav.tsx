@@ -35,7 +35,7 @@ export function MobileNav() {
             onClick={() => setOpen(false)}
         >
             <Logo className="h-8 w-8 mr-2" />
-            <span className="font-bold text-lg text-primary">Dreamcoin</span>
+            <span className="font-bold text-lg text-primary">African Tycoon</span>
         </Link>
         <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
           <div className="flex flex-col space-y-2">

@@ -7,8 +7,15 @@ import { GeistMono } from 'geist/font/mono';
 
 
 export const metadata: Metadata = {
-  title: 'Dreamcoin',
-  description: 'Gamified crypto trading experience.',
+  title: 'African Tycoon',
+  description: 'Build your crypto empire with African Tycoon - The ultimate gamified cryptocurrency trading platform with AI-powered investment strategies.',
+  keywords: 'cryptocurrency, trading, DeFi, BSC, PancakeSwap, gamification, African, investment, AI',
+  authors: [{ name: 'African Tycoon Team' }],
+  openGraph: {
+    title: 'African Tycoon',
+    description: 'Build your crypto empire with African Tycoon',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({

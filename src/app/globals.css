@@ -2,79 +2,81 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=PT+Sans:wght@400;700&display=swap');
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 0 0% 13%; /* #222 - Soft desaturated green background */
+    --foreground: 120 100% 50%; /* #32CD32 - Vibrant green text */
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card: 0 0% 15%;
+    --card-foreground: 120 100% 50%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 120 100% 50%;
 
-    --primary: 262 88% 66%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 120 100% 50%; /* #32CD32 - Vibrant green primary */
+    --primary-foreground: 0 0% 13%;
 
-    --secondary: 330 80% 55%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 51 100% 50%; /* #FFD700 - Rich gold secondary */
+    --secondary-foreground: 0 0% 13%;
 
-    --muted: 240 5% 96.1%;
-    --muted-foreground: 240 3.8% 46.1%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 120 30% 70%;
 
-    --accent: 190 95% 55%;
-    --accent-foreground: 240 10% 3.9%;
+    --accent: 51 100% 50%; /* #FFD700 - Rich gold accent */
+    --accent-foreground: 0 0% 13%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 262 88% 66%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 120 100% 50%;
 
     --radius: 0.75rem;
 
-    --chart-1: 262 88% 66%;
-    --chart-2: 190 95% 55%;
-    --chart-3: 330 80% 55%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 120 100% 50%; /* Green */
+    --chart-2: 51 100% 50%; /* Gold */
+    --chart-3: 30 100% 50%; /* Orange */
+    --chart-4: 280 100% 50%; /* Purple */
+    --chart-5: 200 100% 50%; /* Blue */
   }
 
   .dark {
-    --background: 240 5% 10%;
-    --foreground: 210 40% 98%;
+    --background: 0 0% 13%; /* #222 - Soft desaturated green background */
+    --foreground: 120 100% 50%; /* #32CD32 - Vibrant green text */
 
-    --card: 240 5% 15%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 15%;
+    --card-foreground: 120 100% 50%;
 
-    --popover: 224 71% 4%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 120 100% 50%;
 
-    --primary: 262 88% 66%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 120 100% 50%; /* #32CD32 - Vibrant green primary */
+    --primary-foreground: 0 0% 13%;
 
-    --secondary: 330 80% 55%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 51 100% 50%; /* #FFD700 - Rich gold secondary */
+    --secondary-foreground: 0 0% 13%;
 
-    --muted: 215 28% 17%;
-    --muted-foreground: 215 25% 65%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 120 30% 70%;
 
-    --accent: 190 95% 55%;
-    --accent-foreground: 224 71% 4%;
+    --accent: 51 100% 50%; /* #FFD700 - Rich gold accent */
+    --accent-foreground: 0 0% 13%;
 
     --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 215 28% 17%;
-    --input: 215 28% 22%;
-    --ring: 262 88% 66%;
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 120 100% 50%;
     
-    --chart-1: 262 88% 66%;
-    --chart-2: 190 95% 55%;
-    --chart-3: 330 80% 55%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --chart-1: 120 100% 50%; /* Green */
+    --chart-2: 51 100% 50%; /* Gold */
+    --chart-3: 30 100% 50%; /* Orange */
+    --chart-4: 280 100% 50%; /* Purple */
+    --chart-5: 200 100% 50%; /* Blue */
   }
 }
  
@@ -83,6 +85,133 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-body;
+  }
+}
+
+@layer components {
+  /* African Tribal Pattern Backgrounds */
+  .tribal-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(50, 205, 50, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+      linear-gradient(45deg, transparent 30%, rgba(50, 205, 50, 0.05) 50%, transparent 70%);
+  }
+
+  .tribal-border {
+    border-image: linear-gradient(45deg, #32CD32, #FFD700, #32CD32) 1;
+  }
+
+  /* Gamified Animations */
+  .coin-spin {
+    animation: coinSpin 2s ease-in-out infinite;
+  }
+
+  .pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+
+  .slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+
+  .bounce-in {
+    animation: bounceIn 0.6s ease-out;
+  }
+
+  /* Progress Bar Animations */
+  .progress-fill {
+    animation: progressFill 1s ease-out;
+  }
+
+  /* Achievement Badge Animations */
+  .badge-glow {
+    animation: badgeGlow 1.5s ease-in-out infinite alternate;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(45deg, #32CD32, #FFD700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-gradient-african {
+    background: linear-gradient(135deg, #32CD32 0%, #FFD700 100%);
+  }
+
+  .shadow-african {
+    box-shadow: 0 4px 20px rgba(50, 205, 50, 0.3);
+  }
+
+  .shadow-gold {
+    box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+  }
+}
+
+/* Keyframe Animations */
+@keyframes coinSpin {
+  0% { transform: rotateY(0deg); }
+  50% { transform: rotateY(180deg); }
+  100% { transform: rotateY(360deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    box-shadow: 0 0 5px rgba(50, 205, 50, 0.5);
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(50, 205, 50, 0.8);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes progressFill {
+  from {
+    width: 0%;
+  }
+  to {
+    width: var(--progress-width);
+  }
+}
+
+@keyframes badgeGlow {
+  from {
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+  to {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
   }
 }

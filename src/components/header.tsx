@@ -12,7 +12,7 @@ export function Header() {
           <Link href="/dashboard" className="mr-6 flex items-center space-x-2">
             <Logo className="h-8 w-8" />
             <span className="hidden font-bold sm:inline-block text-lg text-primary">
-              Dreamcoin
+              African Tycoon
             </span>
           </Link>
           <MainNav />

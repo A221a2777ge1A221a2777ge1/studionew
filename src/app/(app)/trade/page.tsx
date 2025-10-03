@@ -1,163 +1,455 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { ArrowDown, Settings, Info, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Logo } from "@/components/logo";
-import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/lib/auth";
+import { web3Provider, formatBalance, calculateSlippage } from "@/lib/web3";
+import { emitMCPEvent } from "@/lib/mcp-pattern";
+import { 
+  ArrowUpDown, 
+  TrendingUp, 
+  TrendingDown, 
+  Coins, 
+  Wallet,
+  Loader2,
+  AlertCircle,
+  CheckCircle
+} from "lucide-react";
 
-const BnbIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M16.624 11.9999L12 7.3759L7.376 11.9999L12 16.6239L16.624 11.9999Z" fill="#F0B90B"/>
-        <path d="M12 21.2499L7.376 16.6259L2.75 11.9999L7.376 7.3759L12 2.7519L16.624 7.3759L21.25 11.9999L16.624 16.6259L12 21.2499ZM12 18.2519L14.752 15.4999L12 12.7479L9.248 15.4999L12 18.2519ZM14.752 8.4999L12 5.7479L9.248 8.4999L12 11.2519L14.752 8.4999Z" fill="#F0B90B"/>
-    </svg>
-);
+interface Token {
+  symbol: string;
+  name: string;
+  address: string;
+  decimals: number;
+  price: number;
+  change24h: number;
+  liquidity: number;
+}
+
+interface TradeParams {
+  tokenIn: string;
+  tokenOut: string;
+  amountIn: string;
+  slippage: number;
+  deadline: number;
+}
+
+const SUPPORTED_TOKENS: Token[] = [
+  {
+    symbol: 'BNB',
+    name: 'Binance Coin',
+    address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
+    decimals: 18,
+    price: 300.00,
+    change24h: 2.5,
+    liquidity: 1500000,
+  },
+  {
+    symbol: 'CAKE',
+    name: 'PancakeSwap',
+    address: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
+    decimals: 18,
+    price: 2.85,
+    change24h: -1.2,
+    liquidity: 800000,
+  },
+  {
+    symbol: 'BUSD',
+    name: 'Binance USD',
+    address: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+    decimals: 18,
+    price: 1.00,
+    change24h: 0.1,
+    liquidity: 2000000,
+  },
+  {
+    symbol: 'USDT',
+    name: 'Tether USD',
+    address: '0x55d398326f99059fF775485246999027B3197955',
+    decimals: 18,
+    price: 1.00,
+    change24h: -0.05,
+    liquidity: 1800000,
+  },
+];
 
 export default function TradePage() {
-  const [fromAmount, setFromAmount] = useState("1");
-  const [toAmount, setToAmount] = useState("");
-  const [price, setPrice] = useState(0.005);
-  const [slippage, setSlippage] = useState("0.5");
-  const [isSwapping, setIsSwapping] = useState(false);
-  const { toast } = useToast();
+  const { userProfile } = useAuth();
+  const [selectedTokenIn, setSelectedTokenIn] = useState<Token>(SUPPORTED_TOKENS[0]);
+  const [selectedTokenOut, setSelectedTokenOut] = useState<Token>(SUPPORTED_TOKENS[1]);
+  const [amountIn, setAmountIn] = useState("");
+  const [amountOut, setAmountOut] = useState("");
+  const [slippage, setSlippage] = useState([0.5]);
+  const [loading, setLoading] = useState(false);
+  const [trading, setTrading] = useState(false);
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<string>("0");
+  const [priceImpact, setPriceImpact] = useState(0);
+  const [minimumReceived, setMinimumReceived] = useState("0");
 
   useEffect(() => {
-    // Simulate live price updates
-    const interval = setInterval(() => {
-      setPrice((prevPrice) => prevPrice * (1 + (Math.random() - 0.5) * 0.02));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    if (fromAmount) {
-      const val = parseFloat(fromAmount);
-      if (!isNaN(val)) {
-        setToAmount((val / price).toFixed(4));
-      } else {
-        setToAmount("");
-      }
-    } else {
-      setToAmount("");
+    if (userProfile?.walletAddress) {
+      setWalletConnected(true);
+      loadWalletBalance();
     }
-  }, [fromAmount, price]);
+  }, [userProfile]);
 
-  const handleSwap = () => {
-    if(!fromAmount || !toAmount) return;
-    setIsSwapping(true);
-    // Simulate transaction
-    setTimeout(() => {
-      setIsSwapping(false);
-      toast({
-        title: "Swap Successful!",
-        description: `You swapped ${fromAmount} BNB for ${toAmount} DREAM.`,
-        variant: "default",
+  useEffect(() => {
+    if (amountIn && selectedTokenIn && selectedTokenOut) {
+      calculateOutput();
+    }
+  }, [amountIn, selectedTokenIn, selectedTokenOut, slippage]);
+
+  const loadWalletBalance = async () => {
+    if (!userProfile?.walletAddress) return;
+
+    try {
+      const balance = await web3Provider.getBalance(userProfile.walletAddress);
+      setWalletBalance(balance);
+    } catch (error) {
+      console.error('Error loading wallet balance:', error);
+    }
+  };
+
+  const calculateOutput = async () => {
+    if (!amountIn || !selectedTokenIn || !selectedTokenOut) return;
+
+    try {
+      // Mock calculation - in real app, use PancakeSwap API
+      const inputValue = parseFloat(amountIn) * selectedTokenIn.price;
+      const outputAmount = inputValue / selectedTokenOut.price;
+      
+      setAmountOut(outputAmount.toFixed(6));
+      
+      // Calculate price impact (simplified)
+      const impact = Math.abs(selectedTokenIn.price - selectedTokenOut.price) / selectedTokenIn.price * 100;
+      setPriceImpact(impact);
+      
+      // Calculate minimum received
+      const minReceived = calculateSlippage(outputAmount.toString(), slippage[0]);
+      setMinimumReceived(minReceived);
+      
+    } catch (error) {
+      console.error('Error calculating output:', error);
+    }
+  };
+
+  const swapTokens = async () => {
+    if (!userProfile?.walletAddress || !amountIn || !amountOut) return;
+
+    try {
+      setTrading(true);
+      
+      const tradeParams: TradeParams = {
+        tokenIn: selectedTokenIn.address,
+        tokenOut: selectedTokenOut.address,
+        amountIn,
+        slippage: slippage[0],
+        deadline: Math.floor(Date.now() / 1000) + 60 * 20, // 20 minutes
+      };
+
+      // Emit MCP event for trade attempt
+      await emitMCPEvent('trade_attempted', {
+        userId: userProfile.uid,
+        tradeParams,
       });
-    }, 1500);
+
+      // Execute trade (mock for demo)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Emit MCP event for successful trade
+      await emitMCPEvent('trade_executed', {
+        userId: userProfile.uid,
+        tradeParams,
+        txHash: '0x' + Math.random().toString(16).substr(2, 64),
+      });
+
+      // Reset form
+      setAmountIn("");
+      setAmountOut("");
+      
+      // Reload balance
+      await loadWalletBalance();
+      
+    } catch (error) {
+      console.error('Trade failed:', error);
+      
+      // Emit MCP event for failed trade
+      await emitMCPEvent('trade_failed', {
+        userId: userProfile.uid,
+        error: error.message,
+      });
+    } finally {
+      setTrading(false);
+    }
+  };
+
+  const connectWallet = async () => {
+    try {
+      const address = await web3Provider.connect();
+      setWalletConnected(true);
+      await loadWalletBalance();
+      
+      await emitMCPEvent('wallet_connected', {
+        userId: userProfile?.uid,
+        walletAddress: address,
+      });
+    } catch (error) {
+      console.error('Error connecting wallet:', error);
+    }
+  };
+
+  const switchTokens = () => {
+    const temp = selectedTokenIn;
+    setSelectedTokenIn(selectedTokenOut);
+    setSelectedTokenOut(temp);
+    setAmountIn("");
+    setAmountOut("");
+  };
+
+  const setMaxAmount = () => {
+    if (selectedTokenIn.symbol === 'BNB') {
+      setAmountIn((parseFloat(walletBalance) * 0.95).toString()); // Leave some for gas
+    } else {
+      setAmountIn(walletBalance);
+    }
   };
 
   return (
-    <div className="container py-8 flex justify-center items-start">
-      <Card className="w-full max-w-md border-primary/50 border-2 shadow-lg shadow-primary/10">
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            Swap Tokens
-            <Settings className="h-5 w-5 text-muted-foreground cursor-pointer hover:text-foreground transition-colors" />
-          </CardTitle>
-          <CardDescription>
-            Trade your tokens seamlessly and securely.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="p-4 rounded-md border bg-muted/30 space-y-2">
-            <div className="flex justify-between items-center">
-                <Label htmlFor="fromAmount">From</Label>
-                <div className="text-sm text-muted-foreground">Balance: 12.5 BNB</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Input
-                id="fromAmount"
-                type="number"
-                value={fromAmount}
-                onChange={(e) => setFromAmount(e.target.value)}
-                className="text-xl font-mono !text-right"
-                placeholder="0.0"
-              />
-              <Button variant="outline" className="flex-shrink-0 text-base">
-                <BnbIcon className="h-6 w-6 mr-2" />
-                BNB
-              </Button>
-            </div>
-          </div>
-          
-          <div className="relative flex justify-center my-2">
-             <Button variant="outline" size="icon" className="h-10 w-10 rounded-full z-10 bg-background border-2">
-                <ArrowDown />
-             </Button>
-          </div>
-
-          <div className="p-4 rounded-md border bg-muted/30 space-y-2">
-             <div className="flex justify-between items-center">
-                <Label htmlFor="toAmount">To</Label>
-                <div className="text-sm text-muted-foreground">Balance: 50,000</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Input
-                id="toAmount"
-                type="number"
-                value={toAmount}
-                readOnly
-                className="text-xl font-mono !text-right"
-                placeholder="0.0"
-              />
-              <Button variant="outline" className="flex-shrink-0 text-base">
-                <Logo className="h-6 w-6 mr-2" />
-                DREAM
-              </Button>
-            </div>
-          </div>
-
-          <div className="text-sm text-muted-foreground flex justify-between items-center pt-2">
-            <span>Price</span>
-            <span className="font-mono">1 DREAM ≈ {price.toFixed(5)} BNB</span>
-          </div>
-
-           <div className="flex items-center justify-between text-sm">
-            <Label htmlFor="slippage" className="text-muted-foreground">Slippage Tolerance</Label>
-            <div className="flex items-center gap-1">
-              <Input 
-                id="slippage"
-                type="number"
-                value={slippage}
-                onChange={(e) => setSlippage(e.target.value)}
-                className="w-20 h-auto px-2 py-1 text-sm text-right bg-transparent border-input"
-                placeholder="0.5"
-              />
-              <span>%</span>
-            </div>
-           </div>
-        </CardContent>
-        <CardFooter className="flex-col gap-2">
-          <Button size="lg" className="w-full text-lg" onClick={handleSwap} disabled={isSwapping || !fromAmount || !toAmount}>
-            {isSwapping ? <Loader2 className="h-5 w-5 animate-spin" /> : "Swap Tokens"}
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-gradient">
+            Trade Tokens
+          </h2>
+          <p className="text-muted-foreground">
+            Swap tokens on PancakeSwap with the best rates
+          </p>
+        </div>
+        {!walletConnected && (
+          <Button onClick={connectWallet} className="bg-gradient-african hover:shadow-african">
+            <Wallet className="w-4 h-4 mr-2" />
+            Connect Wallet
           </Button>
-          <div className="flex items-center text-xs text-muted-foreground gap-1">
-            <Info className="h-3 w-3" />
-            <span>Transactions are simulated for demo purposes.</span>
-          </div>
-        </CardFooter>
-      </Card>
+        )}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <Card className="tribal-pattern">
+            <CardHeader>
+              <CardTitle>Swap Tokens</CardTitle>
+              <CardDescription>
+                Exchange tokens with minimal slippage
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Token Input */}
+              <div className="space-y-2">
+                <Label>From</Label>
+                <div className="flex space-x-2">
+                  <Select value={selectedTokenIn.symbol} onValueChange={(value) => {
+                    const token = SUPPORTED_TOKENS.find(t => t.symbol === value);
+                    if (token) setSelectedTokenIn(token);
+                  }}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUPPORTED_TOKENS.map((token) => (
+                        <SelectItem key={token.symbol} value={token.symbol}>
+                          <div className="flex items-center space-x-2">
+                            <Coins className="w-4 h-4" />
+                            <span>{token.symbol}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    placeholder="0.0"
+                    value={amountIn}
+                    onChange={(e) => setAmountIn(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button variant="outline" size="sm" onClick={setMaxAmount}>
+                    MAX
+                  </Button>
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Balance: {formatBalance(walletBalance)} {selectedTokenIn.symbol}</span>
+                  <span>≈ ${(parseFloat(amountIn || "0") * selectedTokenIn.price).toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Swap Button */}
+              <div className="flex justify-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={switchTokens}
+                  className="rounded-full p-2"
+                >
+                  <ArrowUpDown className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Token Output */}
+              <div className="space-y-2">
+                <Label>To</Label>
+                <div className="flex space-x-2">
+                  <Select value={selectedTokenOut.symbol} onValueChange={(value) => {
+                    const token = SUPPORTED_TOKENS.find(t => t.symbol === value);
+                    if (token) setSelectedTokenOut(token);
+                  }}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SUPPORTED_TOKENS.map((token) => (
+                        <SelectItem key={token.symbol} value={token.symbol}>
+                          <div className="flex items-center space-x-2">
+                            <Coins className="w-4 h-4" />
+                            <span>{token.symbol}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    type="number"
+                    placeholder="0.0"
+                    value={amountOut}
+                    readOnly
+                    className="flex-1"
+                  />
+                </div>
+                <div className="flex justify-between text-sm text-muted-foreground">
+                  <span>Balance: 0.0 {selectedTokenOut.symbol}</span>
+                  <span>≈ ${(parseFloat(amountOut || "0") * selectedTokenOut.price).toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Slippage Settings */}
+              <div className="space-y-3">
+                <Label>Slippage Tolerance: {slippage[0]}%</Label>
+                <Slider
+                  value={slippage}
+                  onValueChange={setSlippage}
+                  max={5}
+                  min={0.1}
+                  step={0.1}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>0.1%</span>
+                  <span>5%</span>
+                </div>
+              </div>
+
+              {/* Trade Button */}
+              <Button
+                onClick={swapTokens}
+                disabled={!walletConnected || !amountIn || !amountOut || trading}
+                className="w-full bg-gradient-african hover:shadow-african"
+                size="lg"
+              >
+                {trading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Swapping...
+                  </>
+                ) : (
+                  'Swap Tokens'
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="space-y-6">
+          {/* Trade Summary */}
+          <Card className="tribal-pattern">
+            <CardHeader>
+              <CardTitle>Trade Summary</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Price Impact</span>
+                <span className={priceImpact > 5 ? "text-red-500" : "text-green-500"}>
+                  {priceImpact.toFixed(2)}%
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Minimum Received</span>
+                <span>{minimumReceived} {selectedTokenOut.symbol}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Slippage</span>
+                <span>{slippage[0]}%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Network Fee</span>
+                <span>~$0.50</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Token Prices */}
+          <Card className="tribal-pattern">
+            <CardHeader>
+              <CardTitle>Token Prices</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {SUPPORTED_TOKENS.map((token) => (
+                  <div key={token.symbol} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <Coins className="w-4 h-4" />
+                      <span className="font-medium">{token.symbol}</span>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold">${token.price.toFixed(2)}</p>
+                      <p className={`text-xs ${token.change24h >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {token.change24h >= 0 ? '+' : ''}{token.change24h}%
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Trading Tips */}
+          <Card className="tribal-pattern">
+            <CardHeader>
+              <CardTitle>Trading Tips</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex items-start space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
+                <p className="text-sm">Always check price impact before trading</p>
+              </div>
+              <div className="flex items-start space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
+                <p className="text-sm">Set appropriate slippage for volatile tokens</p>
+              </div>
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5" />
+                <p className="text-sm">Keep some BNB for gas fees</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

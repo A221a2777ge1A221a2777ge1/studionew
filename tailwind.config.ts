@@ -10,8 +10,9 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-geist-sans)'],
+        sans: ['var(--font-geist-sans)', 'Poppins', 'system-ui', 'sans-serif'],
         mono: ['var(--font-geist-mono)'],
+        body: ['PT Sans', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: 'hsl(var(--border))',
