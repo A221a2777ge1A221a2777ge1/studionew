@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Card,
   CardContent,
@@ -11,16 +9,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Smartphone } from "lucide-react";
+import { MobileMetaMaskHelper } from "@/components/mobile-metamask-helper";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -30,24 +23,24 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 const MetaMaskIcon = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor">
-        <path d="M255.15,64.28,148.36,3.4a23.46,23.46,0,0,0-21,0L20.67,64.28a23.45,23.45,0,0,0-12.82,21V192a23.45,23.45,0,0,0,12.82,21l106.69,60.88a23.46,23.46,0,0,0,21,0L255.15,213a23.45,23.45,0,0,0,12.82-21V85.25A23.45,23.45,0,0,0,255.15,64.28ZM231.51,91.8,172,125.75,128.09,91.8l21.56-12.7L181.6,98.34,204.41,85.25Zm-138.8,1.4,14.65-8.58,15.22,8.81L114,99.25l-21.29-12.5ZM24,192V105.1l43.52,25.4V147L36.32,162.7l30.9,17.43,15.22-9,12.18,7.16-27.4,15.8-30.9-17.43L63,161.46v-34.4l30.9-18,12.18,7.16L81.25,128.75,37.34,103.34,24,96.19Zm91.82,65.81L24,196.9V85.25l13.6-7.89,78.22,46.12ZM128.09,142.5,97.19,125,128.09,107.5l30.9,17.5Zm-.7,10.63-15.22,8.81-30.9-17.43,30.9-17.43,30.9,17.43-30.9,17.43Zm.7,11.33,43.76-25.26,27.16,15.68-44.46,25.5-26.46-15.24Zm65.12-36.56,12.18-7.16,15.22,9-30.9,17.43L163.6,154Zm16,42.42-26.22-15.11,12.18-7.16,32-18.47L232,189.34ZM141,84.12,128.79,76.5l12.18-7.16,13,7.52Zm8,4.71-30.15-17.57,30.15-17.57,12.18,7.16L149.06,71.4l12.18,7.16Zm68.49,103L149.06,128l24.83-14.33,12.18,7.16,30.9,18Zm0-34.4-26.46-15.24,12.18-7.16,30.9,18v34.4Z"/>
-    </svg>
+  <svg {...props} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor">
+    <path d="M255.15,64.28,148.36,3.4a23.46,23.46,0,0,0-21,0L20.67,64.28a23.45,23.45,0,0,0-12.82,21V192a23.45,23.45,0,0,0,12.82,21l106.69,60.88a23.46,23.46,0,0,0,21,0L255.15,213a23.45,23.45,0,0,0,12.82-21V85.25A23.45,23.45,0,0,0,255.15,64.28ZM231.51,91.8,172,125.75,128.09,91.8l21.56-12.7L181.6,98.34,204.41,85.25Zm-138.8,1.4,14.65-8.58,15.22,8.81L114,99.25l-21.29-12.5ZM24,192V105.1l43.52,25.4V147L36.32,162.7l30.9,17.43,15.22-9,12.18,7.16-27.4,15.8-30.9-17.43L63,161.46v-34.4l30.9-18,12.18,7.16L81.25,128.75,37.34,103.34,24,96.19Zm91.82,65.81L24,196.9V85.25l13.6-7.89,78.22,46.12ZM128.09,142.5,97.19,125,128.09,107.5l30.9,17.5Zm-.7,10.63-15.22,8.81-30.9-17.43,30.9-17.43,30.9,17.43-30.9,17.43Zm.7,11.33,43.76-25.26,27.16,15.68-44.46,25.5-26.46-15.24Zm65.12-36.56,12.18-7.16,15.22,9-30.9,17.43L163.6,154Zm16,42.42-26.22-15.11,12.18-7.16,32-18.47L232,189.34ZM141,84.12,128.79,76.5l12.18-7.16,13,7.52Zm8,4.71-30.15-17.57,30.15-17.57,12.18,7.16L149.06,71.4l12.18,7.16Zm68.49,103L149.06,128l24.83-14.33,12.18,7.16,30.9,18Zm0-34.4-26.46-15.24,12.18-7.16,30.9,18v34.4Z"/>
+  </svg>
 );
 
 export function AuthForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithGoogle, signInWithEmail, signUpWithEmail, signInWithMetaMask } = useAuth();
+  const { signInWithGoogle, signInWithMetaMask } = useAuth();
   
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [displayName, setDisplayName] = useState("");
+  const [loadingMethod, setLoadingMethod] = useState<string | null>(null);
+  const [showMobileHelper, setShowMobileHelper] = useState(false);
 
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
+      setLoadingMethod('google');
       await signInWithGoogle();
       router.push("/dashboard");
       toast({
@@ -62,189 +55,138 @@ export function AuthForm() {
       });
     } finally {
       setLoading(false);
+      setLoadingMethod(null);
     }
   };
 
   const handleMetaMaskSignIn = async () => {
     try {
       setLoading(true);
+      setLoadingMethod('metamask');
       await signInWithMetaMask();
       router.push("/dashboard");
       toast({
-        title: "Wallet Connected!",
-        description: "Successfully connected your MetaMask wallet.",
-      });
-    } catch (error) {
-      toast({
-        title: "Connection failed",
-        description: "Failed to connect MetaMask. Please make sure MetaMask is installed.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailSignIn = async () => {
-    try {
-      setLoading(true);
-      await signInWithEmail(email, password);
-      router.push("/dashboard");
-      toast({
-        title: "Welcome back!",
-        description: "Successfully signed in.",
-      });
-    } catch (error) {
-      toast({
-        title: "Sign-in failed",
-        description: "Invalid email or password. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailSignUp = async () => {
-    try {
-      setLoading(true);
-      await signUpWithEmail(email, password, displayName);
-      router.push("/dashboard");
-      toast({
         title: "Welcome to African Tycoon!",
-        description: "Account created successfully.",
+        description: "Successfully connected with MetaMask.",
       });
     } catch (error) {
-      toast({
-        title: "Sign-up failed",
-        description: "Failed to create account. Please try again.",
-        variant: "destructive",
-      });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      if (errorMessage.includes('MetaMask not detected')) {
+        // Check if we're on mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          setShowMobileHelper(true);
+        } else {
+          toast({
+            title: "MetaMask Required",
+            description: "Please install MetaMask browser extension.",
+            variant: "destructive",
+          });
+        }
+      } else if (errorMessage.includes('User rejected')) {
+        toast({
+          title: "Connection Cancelled",
+          description: "MetaMask connection was cancelled. Please try again.",
+          variant: "destructive",
+        });
+      } else if (errorMessage.includes('locked')) {
+        toast({
+          title: "MetaMask Locked",
+          description: "Please unlock your MetaMask wallet and try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "MetaMask Connection Failed",
+          description: `Failed to connect with MetaMask: ${errorMessage}`,
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
+      setLoadingMethod(null);
     }
   };
 
   return (
-    <div className="w-full max-w-md mx-auto">
-      <Card className="border-primary/50 border-2 shadow-lg shadow-primary/20 bg-card/80 backdrop-blur-sm tribal-pattern">
-        <CardHeader className="text-center">
-          <CardTitle className="font-bold text-2xl text-accent">START YOUR EMPIRE</CardTitle>
-          <CardDescription>
-            Choose your preferred way to connect and begin your crypto journey.
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 p-4">
+      <Card className="w-full max-w-md tribal-pattern">
+        <CardHeader className="space-y-1 text-center">
+          <CardTitle className="text-2xl font-bold text-gradient">
+            Welcome to African Tycoon
+          </CardTitle>
+          <CardDescription className="text-muted-foreground">
+            Choose your preferred sign-in method to start your crypto empire
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="wallet" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="wallet">Wallet</TabsTrigger>
-              <TabsTrigger value="email">Email</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="wallet" className="space-y-4">
-              <div className="space-y-3">
-                <Button 
-                  size="lg" 
-                  className="w-full text-base bg-gradient-african hover:shadow-african transition-all duration-300" 
-                  onClick={handleGoogleSignIn}
-                  disabled={loading}
-                >
-                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <GoogleIcon className="mr-2 h-5 w-5 fill-current" />}
-                  Continue with Google
-                </Button>
-                <Button 
-                  size="lg" 
-                  className="w-full text-base bg-secondary hover:shadow-gold transition-all duration-300" 
-                  onClick={handleMetaMaskSignIn}
-                  disabled={loading}
-                >
-                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <MetaMaskIcon className="mr-2 h-5 w-5" />}
-                  Connect MetaMask
-                </Button>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="email" className="space-y-4">
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <Button 
-                  size="lg" 
-                  className="w-full bg-gradient-african hover:shadow-african transition-all duration-300" 
-                  onClick={handleEmailSignIn}
-                  disabled={loading}
-                >
-                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-                  Sign In
-                </Button>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="register" className="space-y-4">
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <Label htmlFor="reg-name">Display Name</Label>
-                  <Input
-                    id="reg-name"
-                    type="text"
-                    placeholder="Enter your display name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-email">Email</Label>
-                  <Input
-                    id="reg-email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reg-password">Password</Label>
-                  <Input
-                    id="reg-password"
-                    type="password"
-                    placeholder="Create a password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-                <Button 
-                  size="lg" 
-                  className="w-full bg-gradient-african hover:shadow-african transition-all duration-300" 
-                  onClick={handleEmailSignUp}
-                  disabled={loading}
-                >
-                  {loading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
-                  Create Account
-                </Button>
-              </div>
-            </TabsContent>
-          </Tabs>
+        <CardContent className="space-y-4">
+          {/* Google Sign In */}
+          <Button
+            onClick={handleGoogleSignIn}
+            disabled={loading}
+            className="w-full h-12 bg-white text-black hover:bg-gray-100 border border-gray-300"
+            variant="outline"
+          >
+            {loadingMethod === 'google' ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <GoogleIcon className="mr-2 h-5 w-5" />
+            )}
+            Continue with Google
+          </Button>
+
+          {/* MetaMask Sign In */}
+          <Button
+            onClick={handleMetaMaskSignIn}
+            disabled={loading}
+            className="w-full h-12 bg-orange-500 text-white hover:bg-orange-600"
+          >
+            {loadingMethod === 'metamask' ? (
+              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+            ) : (
+              <MetaMaskIcon className="mr-2 h-5 w-5" />
+            )}
+            Connect with MetaMask
+          </Button>
+
+          {/* Mobile MetaMask Info */}
+          <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-dashed">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+              <Smartphone className="h-4 w-4" />
+              <span className="font-medium">Mobile Users:</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              For MetaMask on mobile, make sure you have the MetaMask app installed and 
+              use the "Connect with MetaMask" option in your mobile browser.
+            </p>
+          </div>
+
+          {/* Terms and Privacy */}
+          <div className="text-center text-xs text-muted-foreground mt-4">
+            By continuing, you agree to our{" "}
+            <a href="#" className="underline hover:text-primary">
+              Terms of Service
+            </a>{" "}
+            and{" "}
+            <a href="#" className="underline hover:text-primary">
+              Privacy Policy
+            </a>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Mobile MetaMask Helper */}
+      {showMobileHelper && (
+        <MobileMetaMaskHelper
+          onConnect={() => {
+            setShowMobileHelper(false);
+            handleMetaMaskSignIn();
+          }}
+          onClose={() => setShowMobileHelper(false)}
+        />
+      )}
     </div>
   );
 }

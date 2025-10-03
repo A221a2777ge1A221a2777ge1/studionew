@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
   signInWithPopup, 
-  signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
@@ -71,61 +69,57 @@ export class AuthService {
     }
   }
 
-  async signInWithEmail(email: string, password: string): Promise<UserProfile> {
-    try {
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const user = result.user;
-
-      mcpManager.setContext(createMCPContext(user.uid));
-      
-      const userProfile = await this.createOrUpdateUserProfile(user);
-      
-      await emitMCPEvent('user_authenticated', {
-        method: 'email',
-        userId: user.uid,
-        userProfile,
-      });
-
-      return userProfile;
-    } catch (error) {
-      console.error('Email sign-in error:', error);
-      throw error;
-    }
-  }
-
-  async signUpWithEmail(email: string, password: string, displayName: string): Promise<UserProfile> {
-    try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      const user = result.user;
-
-      mcpManager.setContext(createMCPContext(user.uid));
-      
-      if (user && 'updateProfile' in user) {
-        await (user as any).updateProfile({ displayName });
-      }
-      
-      const userProfile = await this.createOrUpdateUserProfile(user);
-      
-      await emitMCPEvent('user_registered', {
-        method: 'email',
-        userId: user.uid,
-        userProfile,
-      });
-
-      return userProfile;
-    } catch (error) {
-      console.error('Email sign-up error:', error);
-      throw error;
-    }
-  }
 
   async signInWithMetaMask(): Promise<UserProfile> {
     try {
-      if (typeof window === 'undefined' || !(window as any).ethereum) {
-        throw new Error('MetaMask not detected');
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined') {
+        throw new Error('MetaMask is only available in browser environments');
       }
 
-      const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
+      // Check for MetaMask or other Web3 providers
+      const ethereum = (window as any).ethereum;
+      
+      if (!ethereum) {
+        // Check if we're on mobile and might need to redirect to MetaMask app
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        if (isMobile) {
+          // Try to detect if MetaMask mobile app is installed
+          const metamaskDeepLink = 'metamask://dapp/';
+          const currentUrl = window.location.href;
+          
+          // If we can't detect MetaMask, provide helpful instructions
+          throw new Error('MetaMask not detected. Please install MetaMask mobile app or use MetaMask browser extension.');
+        } else {
+          throw new Error('MetaMask not detected. Please install MetaMask browser extension.');
+        }
+      }
+
+      // Check if MetaMask is locked
+      const isMetaMaskLocked = ethereum.isMetaMask && !ethereum.selectedAddress;
+      if (isMetaMaskLocked) {
+        throw new Error('MetaMask is locked. Please unlock your MetaMask wallet and try again.');
+      }
+
+      // Request account access
+      let accounts;
+      try {
+        accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+      } catch (requestError: any) {
+        if (requestError.code === 4001) {
+          throw new Error('User rejected the connection request');
+        } else if (requestError.code === -32002) {
+          throw new Error('Connection request already pending. Please check MetaMask.');
+        } else {
+          throw new Error(`Connection failed: ${requestError.message || 'Unknown error'}`);
+        }
+      }
+      
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found. Please connect an account in MetaMask.');
+      }
+
       const walletAddress = accounts[0];
       const uid = `metamask_${walletAddress}`;
 
@@ -280,8 +274,6 @@ export const useAuth = () => {
     userProfile,
     loading,
     signInWithGoogle: authService.signInWithGoogle.bind(authService),
-    signInWithEmail: authService.signInWithEmail.bind(authService),
-    signUpWithEmail: authService.signUpWithEmail.bind(authService),
     signInWithMetaMask: authService.signInWithMetaMask.bind(authService),
     signOut: authService.signOut.bind(authService),
   };
