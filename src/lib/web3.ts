@@ -47,15 +47,15 @@ export class Web3Provider {
   private signer: ethers.JsonRpcSigner | null = null;
 
   async connect(): Promise<string> {
-    if (typeof window === 'undefined' || !window.ethereum) {
+    if (typeof window === 'undefined' || !(window as any).ethereum) {
       throw new Error('MetaMask not detected');
     }
 
-    this.provider = new ethers.BrowserProvider(window.ethereum);
+    this.provider = new ethers.BrowserProvider((window as any).ethereum);
     this.signer = await this.provider.getSigner();
     
     // Request account access
-    await window.ethereum.request({ method: 'eth_requestAccounts' });
+    await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
     
     return await this.signer.getAddress();
   }

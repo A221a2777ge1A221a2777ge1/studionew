@@ -90,7 +90,9 @@ export class AuthService {
       const user = result.user;
       
       // Update display name
-      await user.updateProfile({ displayName });
+      if (user && 'updateProfile' in user) {
+        await (user as any).updateProfile({ displayName });
+      }
       
       const userProfile = await this.createOrUpdateUserProfile(user);
       
@@ -109,12 +111,12 @@ export class AuthService {
 
   async signInWithMetaMask(): Promise<UserProfile> {
     try {
-      if (typeof window === 'undefined' || !window.ethereum) {
+      if (typeof window === 'undefined' || !(window as any).ethereum) {
         throw new Error('MetaMask not detected');
       }
 
       // Request account access
-      const accounts = await window.ethereum.request({ 
+      const accounts = await (window as any).ethereum.request({ 
         method: 'eth_requestAccounts' 
       });
       
@@ -229,7 +231,7 @@ export class AuthService {
         uid: user.uid,
         email: user.email || '',
         displayName: user.displayName || 'Anonymous User',
-        photoURL: user.photoURL,
+        photoURL: user.photoURL || undefined,
         level: 1,
         experience: 0,
         totalTrades: 0,

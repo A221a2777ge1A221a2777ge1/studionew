@@ -184,7 +184,7 @@ export default function TradePage() {
       // Emit MCP event for failed trade
       await emitMCPEvent('trade_failed', {
         userId: userProfile.uid,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     } finally {
       setTrading(false);
