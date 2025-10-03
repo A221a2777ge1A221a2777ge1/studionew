@@ -47,15 +47,22 @@ export class AuthService {
       const result = await signInWithPopup(auth, this.googleProvider);
       const user = result.user;
       
-      mcpManager.setContext(createMCPContext(user.uid));
+      // Set MCP context first
+      const context = createMCPContext(user.uid, { method: 'google' });
+      mcpManager.setContext(context);
       
       const userProfile = await this.createOrUpdateUserProfile(user);
       
-      await emitMCPEvent('user_authenticated', {
-        method: 'google',
-        userId: user.uid,
-        userProfile,
-      });
+      // Emit MCP event (now context is set)
+      try {
+        await emitMCPEvent('user_authenticated', {
+          method: 'google',
+          userId: user.uid,
+          userProfile,
+        });
+      } catch (mcpError) {
+        console.warn('MCP event failed, continuing with auth:', mcpError);
+      }
 
       return userProfile;
     } catch (error) {
@@ -122,15 +129,22 @@ export class AuthService {
       const walletAddress = accounts[0];
       const uid = `metamask_${walletAddress}`;
 
-      mcpManager.setContext(createMCPContext(uid));
+      // Set MCP context first
+      const context = createMCPContext(uid, { method: 'metamask', walletAddress });
+      mcpManager.setContext(context);
 
       const userProfile = await this.createMetaMaskUserProfile(walletAddress);
       
-      await emitMCPEvent('user_authenticated', {
-        method: 'metamask',
-        walletAddress,
-        userProfile,
-      });
+      // Emit MCP event (now context is set)
+      try {
+        await emitMCPEvent('user_authenticated', {
+          method: 'metamask',
+          walletAddress,
+          userProfile,
+        });
+      } catch (mcpError) {
+        console.warn('MCP event failed, continuing with auth:', mcpError);
+      }
 
       return userProfile;
     } catch (error) {

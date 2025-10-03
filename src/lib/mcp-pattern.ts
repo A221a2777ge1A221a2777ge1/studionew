@@ -155,7 +155,19 @@ export const createMCPContext = (userId: string, metadata: Record<string, any> =
 };
 
 export const emitMCPEvent = async (eventType: string, data: any): Promise<any> => {
-  return await mcpManager.emit(eventType, data);
+  // Ensure context is set before emitting
+  if (!mcpManager.getContext() && data.userId) {
+    const context = createMCPContext(data.userId, { source: 'auth' });
+    mcpManager.setContext(context);
+  }
+  
+  try {
+    return await mcpManager.emit(eventType, data);
+  } catch (error) {
+    // If MCP fails, just log and continue (don't break the app)
+    console.warn('MCP Event failed:', eventType, error);
+    return { success: false, error: 'MCP Event failed' };
+  }
 };
 
 export const getMCPDebugInfo = (): any => {
