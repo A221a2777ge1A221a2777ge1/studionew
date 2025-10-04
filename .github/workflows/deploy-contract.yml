@@ -1,0 +1,83 @@
+name: Deploy BBFT Contract
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Network to deploy to'
+        required: true
+        default: 'bsc-testnet'
+        type: choice
+        options:
+        - bsc-testnet
+        - bsc-mainnet
+      treasury_address:
+        description: 'Treasury wallet address'
+        required: true
+        type: string
+      dev_wallet:
+        description: 'Developer wallet address'
+        required: true
+        type: string
+
+jobs:
+  deploy-contract:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Compile contracts
+      run: npm run compile
+      
+    - name: Deploy to BSC Testnet
+      if: ${{ github.event.inputs.network == 'bsc-testnet' }}
+      run: npm run deploy:testnet
+      env:
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_TESTNET }}
+        TREASURY_ADDRESS: ${{ github.event.inputs.treasury_address }}
+        DEV_WALLET: ${{ github.event.inputs.dev_wallet }}
+        
+    - name: Deploy to BSC Mainnet
+      if: ${{ github.event.inputs.network == 'bsc-mainnet' }}
+      run: npm run deploy:mainnet
+      env:
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY_MAINNET }}
+        TREASURY_ADDRESS: ${{ github.event.inputs.treasury_address }}
+        DEV_WALLET: ${{ github.event.inputs.dev_wallet }}
+        
+    - name: Verify contract on BscScan
+      if: always()
+      run: |
+        echo "Contract deployment completed. Please verify manually on BscScan:"
+        echo "1. Go to BscScan.com"
+        echo "2. Navigate to the contract address"
+        echo "3. Click 'Verify and Publish'"
+        echo "4. Use the following settings:"
+        echo "   - Compiler Type: Solidity (Single file)"
+        echo "   - Compiler Version: 0.8.20"
+        echo "   - License: MIT"
+        echo "5. Copy the contract source code from contracts/BBFT.sol"
+        echo "6. Add constructor parameters if needed"
+        
+    - name: Update Firebase config
+      if: always()
+      run: |
+        echo "After contract deployment, update Firebase config:"
+        echo "1. Go to Firebase Console"
+        echo "2. Navigate to Firestore Database"
+        echo "3. Update config/contract document with:"
+        echo "   - address: [contract address]"
+        echo "   - network: ${{ github.event.inputs.network }}"
+        echo "   - deployedAt: [current timestamp]"
+        echo "   - isActive: true"

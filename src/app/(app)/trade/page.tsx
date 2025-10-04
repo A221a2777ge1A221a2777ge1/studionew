@@ -98,6 +98,8 @@ export default function TradePage() {
   const [amountIn, setAmountIn] = useState("");
   const [amountOut, setAmountOut] = useState("");
   const [slippage, setSlippage] = useState([0.5]);
+  const [customSlippage, setCustomSlippage] = useState("");
+  const [useCustomSlippage, setUseCustomSlippage] = useState(false);
   const [loading, setLoading] = useState(false);
   const [trading, setTrading] = useState(false);
   const [walletBalance, setWalletBalance] = useState<string>("0");
@@ -114,7 +116,15 @@ export default function TradePage() {
     if (amountIn && selectedTokenIn && selectedTokenOut) {
       calculateOutput();
     }
-  }, [amountIn, selectedTokenIn, selectedTokenOut, slippage]);
+  }, [amountIn, selectedTokenIn, selectedTokenOut, slippage, customSlippage, useCustomSlippage]);
+
+  const getCurrentSlippage = () => {
+    if (useCustomSlippage && customSlippage) {
+      const value = parseFloat(customSlippage);
+      return isNaN(value) ? 0.5 : Math.max(0.1, Math.min(50, value));
+    }
+    return slippage[0];
+  };
 
   const loadWalletBalance = async () => {
     if (!account) return;
@@ -143,7 +153,8 @@ export default function TradePage() {
       setPriceImpact(impact);
       
       // Calculate minimum received
-      const minReceived = calculateSlippage(outputAmount.toString(), slippage[0]);
+      const currentSlippage = getCurrentSlippage();
+      const minReceived = calculateSlippage(outputAmount.toString(), currentSlippage);
       setMinimumReceived(minReceived);
       
     } catch (error) {
@@ -157,11 +168,12 @@ export default function TradePage() {
     try {
       setTrading(true);
       
+      const currentSlippage = getCurrentSlippage();
       const tradeParams: TradeParams = {
         tokenIn: selectedTokenIn.address,
         tokenOut: selectedTokenOut.address,
         amountIn,
-        slippage: slippage[0],
+        slippage: currentSlippage,
         deadline: Math.floor(Date.now() / 1000) + 60 * 20, // 20 minutes
       };
 
@@ -177,7 +189,7 @@ export default function TradePage() {
         selectedTokenOut.address,
         amountIn,
         minimumReceived,
-        slippage[0]
+        currentSlippage
       );
       
       // Emit MCP event for successful trade
@@ -285,8 +297,14 @@ export default function TradePage() {
                     value={amountIn}
                     onChange={(e) => setAmountIn(e.target.value)}
                     className="flex-1"
+                    aria-label={`Amount of ${selectedTokenIn.symbol} to swap`}
                   />
-                  <Button variant="outline" size="sm" onClick={setMaxAmount}>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={setMaxAmount}
+                    aria-label={`Set maximum amount of ${selectedTokenIn.symbol}`}
+                  >
                     MAX
                   </Button>
                 </div>
@@ -303,6 +321,7 @@ export default function TradePage() {
                   size="sm"
                   onClick={switchTokens}
                   className="rounded-full p-2"
+                  aria-label="Switch input and output tokens"
                 >
                   <ArrowUpDown className="w-4 h-4" />
                 </Button>
@@ -336,6 +355,7 @@ export default function TradePage() {
                     value={amountOut}
                     readOnly
                     className="flex-1"
+                    aria-label={`Amount of ${selectedTokenOut.symbol} to receive`}
                   />
                 </div>
                 <div className="flex justify-between text-sm text-muted-foreground">
@@ -346,19 +366,92 @@ export default function TradePage() {
 
               {/* Slippage Settings */}
               <div className="space-y-3">
-                <Label>Slippage Tolerance: {slippage[0]}%</Label>
-                <Slider
-                  value={slippage}
-                  onValueChange={setSlippage}
-                  max={5}
-                  min={0.1}
-                  step={0.1}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>0.1%</span>
-                  <span>5%</span>
+                <Label>Slippage Tolerance: {getCurrentSlippage()}%</Label>
+                
+                {/* Preset buttons */}
+                <div className="flex space-x-2">
+                  <Button
+                    variant={!useCustomSlippage && slippage[0] === 0.1 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setSlippage([0.1]);
+                      setUseCustomSlippage(false);
+                    }}
+                  >
+                    0.1%
+                  </Button>
+                  <Button
+                    variant={!useCustomSlippage && slippage[0] === 0.5 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setSlippage([0.5]);
+                      setUseCustomSlippage(false);
+                    }}
+                  >
+                    0.5%
+                  </Button>
+                  <Button
+                    variant={!useCustomSlippage && slippage[0] === 1.0 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => {
+                      setSlippage([1.0]);
+                      setUseCustomSlippage(false);
+                    }}
+                  >
+                    1.0%
+                  </Button>
+                  <Button
+                    variant={useCustomSlippage ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setUseCustomSlippage(true)}
+                  >
+                    Custom
+                  </Button>
                 </div>
+
+                {/* Slider (when not using custom) */}
+                {!useCustomSlippage && (
+                  <>
+                    <Slider
+                      value={slippage}
+                      onValueChange={setSlippage}
+                      max={5}
+                      min={0.1}
+                      step={0.1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>0.1%</span>
+                      <span>5%</span>
+                    </div>
+                  </>
+                )}
+
+                {/* Custom input (when using custom) */}
+                {useCustomSlippage && (
+                  <div className="flex space-x-2">
+                    <Input
+                      type="number"
+                      placeholder="0.5"
+                      value={customSlippage}
+                      onChange={(e) => setCustomSlippage(e.target.value)}
+                      min="0.1"
+                      max="50"
+                      step="0.1"
+                      className="flex-1"
+                      aria-label="Custom slippage tolerance percentage"
+                    />
+                    <span className="text-sm text-muted-foreground self-center">%</span>
+                  </div>
+                )}
+
+                {/* Slippage warning */}
+                {getCurrentSlippage() > 5 && (
+                  <div className="flex items-center space-x-2 text-yellow-600 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>High slippage tolerance may result in significant price impact</span>
+                  </div>
+                )}
               </div>
 
               {/* Trade Button */}
@@ -400,7 +493,7 @@ export default function TradePage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Slippage</span>
-                <span>{slippage[0]}%</span>
+                <span>{getCurrentSlippage()}%</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Network Fee</span>
@@ -446,7 +539,7 @@ export default function TradePage() {
               </div>
               <div className="flex items-start space-x-2">
                 <CheckCircle className="w-4 h-4 text-green-500 mt-0.5" />
-                <p className="text-sm">Set appropriate slippage for volatile tokens</p>
+                <p className="text-sm">Set appropriate slippage for volatile tokens (0.1-1% for stable pairs, 1-5% for volatile tokens)</p>
               </div>
               <div className="flex items-start space-x-2">
                 <AlertCircle className="w-4 h-4 text-yellow-500 mt-0.5" />

@@ -122,17 +122,6 @@ const ACHIEVEMENTS: Achievement[] = [
     unlocked: false,
   },
   {
-    id: 'ai_strategy',
-    title: 'AI Strategist',
-    description: 'Use AI investment strategy 5 times',
-    icon: 'Award',
-    category: 'special',
-    rarity: 'rare',
-    reward: { type: 'tokens', amount: 1500 },
-    progress: { current: 2, target: 5 },
-    unlocked: false,
-  },
-  {
     id: 'daily_trader',
     title: 'Daily Trader',
     description: 'Trade for 7 consecutive days',

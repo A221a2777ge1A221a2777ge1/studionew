@@ -17,11 +17,11 @@ African Tycoon is a comprehensive, gamified cryptocurrency trading platform that
 - **Slippage Control**: Customizable slippage tolerance settings
 - **Transaction History**: Complete trade history and analytics
 
-### 🤖 AI-Powered Investment Strategies
-- **Gemini AI Integration**: Intelligent market analysis and strategy recommendations
-- **Portfolio Simulation**: 30-day performance projections
-- **Risk Assessment**: Personalized risk tolerance analysis
-- **Market Insights**: Real-time market trend analysis
+### 💎 BBFT Token Integration
+- **BBFT Smart Contract**: Deployable BEP-20 token on BSC
+- **Trading Features**: Buy/sell fees, automated swapping, treasury management
+- **Owner Controls**: Configurable fees, limits, and trading controls
+- **Liquidity Management**: Automated liquidity provision and management
 
 ### 🏆 Gamification & Achievements
 - **Achievement System**: Unlock rewards through trading milestones
@@ -83,11 +83,15 @@ African Tycoon is a comprehensive, gamified cryptocurrency trading platform that
 
    # Web3 Configuration
    NEXT_PUBLIC_BSC_RPC_URL=https://bsc-dataseed.binance.org/
+   NEXT_PUBLIC_BSC_TESTNET_RPC_URL=https://data-seed-prebsc-1-s1.binance.org:8545/
    NEXT_PUBLIC_PANCAKESWAP_ROUTER=0x10ED43C718714eb63d5aA57B78B54704E256024E
+   NEXT_PUBLIC_PANCAKESWAP_TESTNET_ROUTER=0xD99D1c33F9fC3444f8101754aBC46c52416550D1
    NEXT_PUBLIC_WBNB_ADDRESS=0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
 
-   # AI Configuration
-   NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key
+   # BBFT Contract Configuration
+   NEXT_PUBLIC_BBFT_CONTRACT_ADDRESS=
+   NEXT_PUBLIC_BBFT_TREASURY_ADDRESS=
+   NEXT_PUBLIC_BBFT_DEV_WALLET=
 
    # App Configuration
    NEXT_PUBLIC_APP_URL=http://localhost:9002
@@ -112,7 +116,6 @@ african-tycoon/
 │   │   ├── (app)/             # Protected app routes
 │   │   │   ├── dashboard/     # Main dashboard
 │   │   │   ├── trade/         # Trading interface
-│   │   │   ├── investment-strategy/ # AI strategy page
 │   │   │   ├── achievements/  # Achievements system
 │   │   │   ├── leaderboard/   # User rankings
 │   │   │   └── profile/       # User profile
@@ -128,7 +131,8 @@ african-tycoon/
 │   │   ├── firebase.ts       # Firebase configuration
 │   │   ├── web3.ts          # Web3 and BSC integration
 │   │   ├── auth.ts          # Authentication service
-│   │   ├── ai-investment.ts # AI investment strategies
+│   │   ├── contractService.ts # BBFT contract integration
+│   │   ├── swapService.ts # Token swapping service
 │   │   ├── mcp-pattern.ts   # MCP pattern implementation
 │   │   └── utils.ts         # General utilities
 │   └── hooks/               # Custom React hooks
@@ -178,25 +182,38 @@ african-tycoon/
 
 ## 🚀 Deployment
 
-### Vercel Deployment (Recommended)
+### Smart Contract Deployment
 
-1. **Connect to Vercel**
+1. **Deploy BBFT Contract to BSC Testnet**
    ```bash
-   npm i -g vercel
-   vercel login
-   vercel
+   # Set environment variables
+   export PRIVATE_KEY_TESTNET=your_testnet_private_key
+   export TREASURY_ADDRESS=your_treasury_address
+   export DEV_WALLET=your_dev_wallet_address
+   
+   # Deploy to testnet
+   npm run deploy:testnet
    ```
 
-2. **Configure Environment Variables** in Vercel dashboard:
-   - Add all environment variables from `.env.local`
-   - Set production URLs
-
-3. **Deploy**
+2. **Deploy BBFT Contract to BSC Mainnet**
    ```bash
-   vercel --prod
+   # Set environment variables
+   export PRIVATE_KEY_MAINNET=your_mainnet_private_key
+   export TREASURY_ADDRESS=your_treasury_address
+   export DEV_WALLET=your_dev_wallet_address
+   
+   # Deploy to mainnet
+   npm run deploy:mainnet
    ```
 
-### Firebase Hosting
+3. **Verify Contract on BscScan**
+   - Go to [BscScan.com](https://bscscan.com)
+   - Navigate to your contract address
+   - Click "Verify and Publish"
+   - Use Solidity (Single file), version 0.8.20, MIT license
+   - Copy source code from `contracts/BBFT.sol`
+
+### Firebase Hosting (Recommended)
 
 1. **Install Firebase CLI**
    ```bash
@@ -204,23 +221,83 @@ african-tycoon/
    firebase login
    ```
 
-2. **Build and Deploy**
+2. **Initialize Firebase Project**
+   ```bash
+   firebase init
+   # Select: Hosting, Firestore, Storage
+   ```
+
+3. **Configure Environment Variables**
+   ```bash
+   # Set all required environment variables
+   export NEXT_PUBLIC_FIREBASE_API_KEY=your_key
+   export NEXT_PUBLIC_BBFT_CONTRACT_ADDRESS=deployed_contract_address
+   # ... other variables
+   ```
+
+4. **Build and Deploy**
    ```bash
    npm run build
-   firebase init hosting
    firebase deploy
    ```
 
-### Docker Deployment
+### GitHub Actions CI/CD
 
-1. **Build Docker Image**
+1. **Set up GitHub Secrets**
+   - Go to your repository Settings > Secrets and variables > Actions
+   - Add the following secrets:
+     ```
+     FIREBASE_SERVICE_ACCOUNT
+     FIREBASE_PROJECT_ID
+     FIREBASE_API_KEY
+     FIREBASE_AUTH_DOMAIN
+     FIREBASE_STORAGE_BUCKET
+     FIREBASE_MESSAGING_SENDER_ID
+     FIREBASE_APP_ID
+     FIREBASE_MEASUREMENT_ID
+     BSC_RPC_URL
+     BSC_TESTNET_RPC_URL
+     PANCAKESWAP_ROUTER
+     PANCAKESWAP_TESTNET_ROUTER
+     WBNB_ADDRESS
+     BBFT_CONTRACT_ADDRESS
+     BBFT_TREASURY_ADDRESS
+     BBFT_DEV_WALLET
+     PRIVATE_KEY_TESTNET
+     PRIVATE_KEY_MAINNET
+     ```
+
+2. **Automatic Deployment**
+   - Push to `main` branch triggers automatic deployment
+   - Use GitHub Actions workflow for contract deployment
+
+### Manual Deployment Steps
+
+1. **Update Firebase Config**
    ```bash
-   docker build -t african-tycoon .
+   # After contract deployment, update Firestore config
+   firebase firestore:set config/contract '{
+     "address": "0x...",
+     "abiVersion": "1.0.0",
+     "deployedAt": "2024-01-01T00:00:00Z",
+     "network": "bsc",
+     "routerAddress": "0x10ED43C718714eb63d5aA57B78B54704E256024E",
+     "treasuryAddress": "0x...",
+     "devWallet": "0x...",
+     "isActive": true
+   }'
    ```
 
-2. **Run Container**
+2. **Enable Trading**
    ```bash
-   docker run -p 3000:3000 --env-file .env.local african-tycoon
+   # Call enableTrading function on deployed contract
+   # This requires owner privileges
+   ```
+
+3. **Add Initial Liquidity**
+   ```bash
+   # Call addLiquidity function on deployed contract
+   # This requires owner privileges and BNB/token balance
    ```
 
 ## 📱 Mobile App (Future)

@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network bscTestnet",
+    "deploy:mainnet": "hardhat run scripts/deploy.ts --network bsc"
   },
   "dependencies": {
     "@google-cloud/firestore": "^7.1.0",
@@ -56,11 +60,14 @@
     "wagmi": "^2.12.29"
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "hardhat": "^2.19.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
+    "ts-node": "^10.9.2",
     "typescript": "^5"
   }
 }

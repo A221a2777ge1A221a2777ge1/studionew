@@ -17,12 +17,30 @@ export const BSC_CONFIG = {
   },
 };
 
+// BSC Testnet Configuration
+export const BSC_TESTNET_CONFIG = {
+  chainId: '0x61', // 97 in hex
+  chainName: 'Binance Smart Chain Testnet',
+  rpcUrls: ['https://data-seed-prebsc-1-s1.binance.org:8545/'],
+  blockExplorerUrls: ['https://testnet.bscscan.com'],
+  nativeCurrency: {
+    name: 'tBNB',
+    symbol: 'tBNB',
+    decimals: 18,
+  },
+};
+
 // Contract Addresses
 export const CONTRACT_ADDRESSES = {
+  // Mainnet
   PANCAKESWAP_ROUTER: '0x10ED43C718714eb63d5aA57B78B54704E256024E',
   WBNB: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
   BUSD: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
   CAKE: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
+  // Testnet
+  PANCAKESWAP_TESTNET_ROUTER: '0xD99D1c33F9fC3444f8101754aBC46c52416550D1',
+  WBNB_TESTNET: '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd',
+  BUSD_TESTNET: '0x78867BbEeF44f2326bF8DDd1941a4439382EF2A7',
 };
 
 // PancakeSwap Router ABI (simplified)
@@ -76,21 +94,33 @@ export const useWeb3 = () => {
     return typeof window !== 'undefined' && !!(window as any).ethereum;
   }, []);
 
-  // Check if we're on the correct network (BSC)
+  // Check if we're on the correct network (BSC Mainnet or Testnet)
   const isCorrectNetwork = useCallback((chainId: string) => {
-    return chainId === BSC_CONFIG.chainId;
+    return chainId === BSC_CONFIG.chainId || chainId === BSC_TESTNET_CONFIG.chainId;
   }, []);
 
-  // Switch to BSC network
-  const switchToBSC = useCallback(async () => {
+  // Get current network config based on chainId
+  const getNetworkConfig = useCallback((chainId: string) => {
+    if (chainId === BSC_CONFIG.chainId) {
+      return BSC_CONFIG;
+    } else if (chainId === BSC_TESTNET_CONFIG.chainId) {
+      return BSC_TESTNET_CONFIG;
+    }
+    return null;
+  }, []);
+
+  // Switch to BSC network (defaults to mainnet)
+  const switchToBSC = useCallback(async (useTestnet: boolean = false) => {
     if (!isMetaMaskInstalled()) {
       throw new Error('MetaMask not installed');
     }
 
+    const targetConfig = useTestnet ? BSC_TESTNET_CONFIG : BSC_CONFIG;
+
     try {
       await (window as any).ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: BSC_CONFIG.chainId }],
+        params: [{ chainId: targetConfig.chainId }],
       });
     } catch (switchError: any) {
       // If the network doesn't exist, add it
@@ -98,13 +128,13 @@ export const useWeb3 = () => {
         try {
           await (window as any).ethereum.request({
             method: 'wallet_addEthereumChain',
-            params: [BSC_CONFIG],
+            params: [targetConfig],
           });
         } catch (addError) {
-          throw new Error('Failed to add BSC network');
+          throw new Error(`Failed to add ${targetConfig.chainName} network`);
         }
       } else {
-        throw new Error('Failed to switch to BSC network');
+        throw new Error(`Failed to switch to ${targetConfig.chainName} network`);
       }
     }
   }, [isMetaMaskInstalled]);
@@ -135,7 +165,18 @@ export const useWeb3 = () => {
 
       // Check if we're on the correct network
       if (!isCorrectNetwork(network.chainId.toString())) {
-        await switchToBSC();
+        // Try to switch to BSC mainnet first, then testnet if that fails
+        try {
+          await switchToBSC(false); // Try mainnet first
+        } catch (error) {
+          console.warn('Failed to switch to BSC mainnet, trying testnet:', error);
+          try {
+            await switchToBSC(true); // Try testnet
+          } catch (testnetError) {
+            throw new Error('Please switch to Binance Smart Chain (Mainnet or Testnet)');
+          }
+        }
+        
         // Re-fetch after network switch
         const newNetwork = await provider.getNetwork();
         const newBalance = await provider.getBalance(account);
@@ -351,8 +392,10 @@ export const useWeb3 = () => {
     getTokenPrice,
     swapTokens,
     switchToBSC,
+    getNetworkConfig,
     isMetaMaskInstalled: isMetaMaskInstalled(),
     isCorrectNetwork: state.chainId ? isCorrectNetwork(state.chainId) : false,
+    currentNetworkConfig: state.chainId ? getNetworkConfig(state.chainId) : null,
   };
 };
 
