@@ -37,10 +37,12 @@ export const CONTRACT_ADDRESSES = {
   WBNB: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
   BUSD: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
   CAKE: '0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82',
+  EVANA: process.env.NEXT_PUBLIC_EVANA_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000',
   // Testnet
   PANCAKESWAP_TESTNET_ROUTER: '0xD99D1c33F9fC3444f8101754aBC46c52416550D1',
   WBNB_TESTNET: '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd',
   BUSD_TESTNET: '0x78867BbEeF44f2326bF8DDd1941a4439382EF2A7',
+  EVANA_TESTNET: process.env.NEXT_PUBLIC_EVANA_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000',
 };
 
 // PancakeSwap Router ABI (simplified)
@@ -116,10 +118,16 @@ export const useWeb3 = () => {
   useEffect(() => {
     if (isMobileDevice && typeof window !== 'undefined') {
       const userAgent = navigator.userAgent;
-      const hasMetaMask = userAgent.includes('MetaMask') || userAgent.includes('WebView');
+      // More comprehensive MetaMask mobile detection
+      const hasMetaMask = userAgent.includes('MetaMask') || 
+                         userAgent.includes('WebView') ||
+                         userAgent.includes('Mobile') ||
+                         (window as any).ethereum?.isMetaMask;
       console.log("🔍 [MOBILE DEBUG] MetaMask mobile detection (initial):", {
         userAgent,
-        hasMetaMask
+        hasMetaMask,
+        ethereum: !!(window as any).ethereum,
+        isMetaMask: !!(window as any).ethereum?.isMetaMask
       });
       setIsMetaMaskMobile(hasMetaMask);
     }
@@ -190,24 +198,28 @@ export const useWeb3 = () => {
       // Handle mobile-specific connection logic
       if (mobile) {
         if (!hasMetaMask) {
-          // On mobile, try to open MetaMask app or show instructions
-          const currentUrl = window.location.href;
+          console.log("🔍 [MOBILE DEBUG] Mobile: MetaMask not detected, showing instructions");
+          
+          // Show instructions for mobile users
+          toast({
+            title: 'MetaMask Mobile Required',
+            description: 'Please install MetaMask mobile app and open this site in the MetaMask browser',
+            variant: 'destructive',
+          });
+          
+          // Try to open MetaMask app using a more reliable method
+          const currentUrl = encodeURIComponent(window.location.href);
           const metamaskUrl = `metamask://dapp/${currentUrl}`;
           
           console.log("🔍 [MOBILE DEBUG] Attempting to open MetaMask app:", metamaskUrl);
           
-          // Try to open MetaMask app
-          window.location.href = metamaskUrl;
-          
-          // Show fallback instructions after a delay
-          setTimeout(() => {
-            console.log("🔍 [MOBILE DEBUG] Showing fallback instructions");
-            toast({
-              title: 'MetaMask Mobile Required',
-              description: 'Please install MetaMask mobile app and open this site in the MetaMask browser',
-              variant: 'destructive',
-            });
-          }, 2000);
+          // Create a temporary link to trigger the app
+          const link = document.createElement('a');
+          link.href = metamaskUrl;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
           
           throw new Error('MetaMask mobile app required. Please install MetaMask and open this site in the MetaMask browser.');
         }

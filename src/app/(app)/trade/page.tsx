@@ -43,6 +43,15 @@ interface TradeParams {
 
 const SUPPORTED_TOKENS: Token[] = [
   {
+    symbol: 'EVANA',
+    name: 'EVANA Token',
+    address: process.env.NEXT_PUBLIC_EVANA_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000',
+    decimals: 18,
+    price: 0.001,
+    change24h: 15.5,
+    liquidity: 500000,
+  },
+  {
     symbol: 'BNB',
     name: 'Binance Coin',
     address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c',
