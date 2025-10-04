@@ -63,9 +63,16 @@ export class AuthService {
       }
 
       return userProfile;
-    } catch (error) {
-      console.error('Google sign-in error:', error);
-      throw error;
+    } catch (error: any) {
+      // Handle specific Firebase auth errors silently
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        // Don't log these as errors - they are normal user behavior
+        throw error;
+      } else {
+        // Log other errors
+        console.error('Google sign-in error:', error);
+        throw error;
+      }
     }
   }
 
