@@ -208,12 +208,9 @@ export class AuthService {
 
   async getUserPreferences(uid: string): Promise<UserProfile['preferences']> {
     try {
-      console.log("🔍 [FIREBASE DEBUG] Getting user preferences:", uid);
-      
       // First try to get from Firebase
       const firebaseProfile = await FirebaseService.getUserProfile(uid);
       if (firebaseProfile?.preferences) {
-        console.log("🔍 [FIREBASE DEBUG] Preferences loaded from Firebase:", firebaseProfile.preferences);
         return firebaseProfile.preferences;
       }
       
@@ -221,14 +218,11 @@ export class AuthService {
       const stored = localStorage.getItem(`user_preferences_${uid}`);
       if (stored) {
         const preferences = JSON.parse(stored);
-        console.log("🔍 [FIREBASE DEBUG] Preferences loaded from localStorage:", preferences);
         return preferences;
       }
       
       // Return default preferences
-      const defaultPreferences = { theme: 'dark', notifications: true, language: 'en' };
-      console.log("🔍 [FIREBASE DEBUG] Using default preferences:", defaultPreferences);
-      return defaultPreferences;
+      return { theme: 'dark', notifications: true, language: 'en' };
     } catch (error) {
       console.error("🔍 [FIREBASE DEBUG] Error getting user preferences:", error);
       return { theme: 'dark', notifications: true, language: 'en' };

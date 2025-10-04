@@ -104,18 +104,15 @@ export class FirebaseService {
 
   static async getUserProfile(uid: string): Promise<UserProfile | null> {
     try {
-      console.log("🔍 [FIREBASE DEBUG] Getting user profile:", uid);
-      
+      // Only log on first call or errors to reduce noise
       const userRef = doc(db, 'users', uid);
       const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
         const profileData = userSnap.data() as UserProfile;
-        console.log("🔍 [FIREBASE DEBUG] User profile retrieved:", profileData);
         return profileData;
       }
       
-      console.log("🔍 [FIREBASE DEBUG] User profile not found");
       return null;
     } catch (error) {
       console.error("🔍 [FIREBASE DEBUG] Error getting user profile:", error);

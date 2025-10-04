@@ -94,30 +94,38 @@ export const useWeb3 = () => {
     return typeof window !== 'undefined' && !!(window as any).ethereum;
   }, []);
 
-  // Check if we're on mobile
-  const isMobile = useCallback(() => {
-    if (typeof window === 'undefined') return false;
-    const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    console.log("🔍 [MOBILE DEBUG] Mobile detection:", {
-      userAgent: navigator.userAgent,
-      isMobile: mobile
-    });
-    return mobile;
+  // Check if we're on mobile (memoized to prevent excessive calls)
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      console.log("🔍 [MOBILE DEBUG] Mobile detection (initial):", {
+        userAgent: navigator.userAgent,
+        isMobile: mobile
+      });
+      setIsMobileDevice(mobile);
+    }
   }, []);
 
-  // Check if MetaMask mobile app is available
-  const isMetaMaskMobileAvailable = useCallback(() => {
-    if (!isMobile()) return false;
-    
-    // Try to detect MetaMask mobile app
-    const userAgent = navigator.userAgent;
-    const hasMetaMask = userAgent.includes('MetaMask') || userAgent.includes('WebView');
-    console.log("🔍 [MOBILE DEBUG] MetaMask mobile detection:", {
-      userAgent,
-      hasMetaMask
-    });
-    return hasMetaMask;
-  }, [isMobile]);
+  const isMobile = useCallback(() => isMobileDevice, [isMobileDevice]);
+
+  // Check if MetaMask mobile app is available (memoized)
+  const [isMetaMaskMobile, setIsMetaMaskMobile] = useState<boolean>(false);
+  
+  useEffect(() => {
+    if (isMobileDevice && typeof window !== 'undefined') {
+      const userAgent = navigator.userAgent;
+      const hasMetaMask = userAgent.includes('MetaMask') || userAgent.includes('WebView');
+      console.log("🔍 [MOBILE DEBUG] MetaMask mobile detection (initial):", {
+        userAgent,
+        hasMetaMask
+      });
+      setIsMetaMaskMobile(hasMetaMask);
+    }
+  }, [isMobileDevice]);
+
+  const isMetaMaskMobileAvailable = useCallback(() => isMetaMaskMobile, [isMetaMaskMobile]);
 
   // Check if we're on the correct network (BSC Mainnet or Testnet)
   const isCorrectNetwork = useCallback((chainId: string) => {
@@ -173,10 +181,10 @@ export const useWeb3 = () => {
       const mobile = isMobile();
       const hasMetaMask = isMetaMaskInstalled();
       
+      // Only log connection environment once per connection attempt
       console.log("🔍 [MOBILE DEBUG] Connection environment:", {
         isMobile: mobile,
-        hasMetaMask,
-        userAgent: navigator.userAgent
+        hasMetaMask
       });
 
       // Handle mobile-specific connection logic

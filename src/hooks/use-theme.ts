@@ -9,15 +9,16 @@ export function useTheme() {
   const { user, userProfile, updateUserPreferences } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Debug: Log theme state changes
+  // Debug: Log theme state changes (reduced frequency)
   useEffect(() => {
-    console.log("🔍 [THEME DEBUG] Theme state changed:", {
-      theme,
-      resolvedTheme,
-      user: user ? { uid: user.uid } : null,
-      userProfile: userProfile ? { preferences: userProfile.preferences } : null,
-      isLoading
-    });
+    if (!isLoading) {
+      console.log("🔍 [THEME DEBUG] Theme state changed:", {
+        theme,
+        resolvedTheme,
+        user: user ? { uid: user.uid } : null,
+        userProfile: userProfile ? { preferences: userProfile.preferences } : null
+      });
+    }
   }, [theme, resolvedTheme, user, userProfile, isLoading]);
 
   // Load user's theme preference on mount
