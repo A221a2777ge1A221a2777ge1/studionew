@@ -4,11 +4,12 @@ import Link from "next/link"
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils"
-import { Compass, LayoutDashboard, ShieldCheck, Trophy, Users, Coins } from "lucide-react";
+import { Compass, LayoutDashboard, ShieldCheck, Trophy, Users, Coins, Brain } from "lucide-react";
 
 export const navLinks = [
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { href: "/trade", label: "Trade", icon: Coins },
+    { href: "/investment-strategy", label: "AI Strategy", icon: Brain },
     { href: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { href: "/achievements", label: "Achievements", icon: ShieldCheck },
     { href: "/referrals", label: "Referrals", icon: Users },
