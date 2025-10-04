@@ -1,13 +1,27 @@
 "use client"
 
 import * as React from "react"
-import { useTheme } from "next-themes"
+import { useTheme } from "@/hooks/use-theme"
 import { Moon, Sun } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, isLoading } = useTheme()
+
+  if (isLoading) {
+    return (
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        disabled
+        aria-label="Loading theme"
+      >
+        <Sun className="h-[1.2rem] w-[1.2rem]" />
+        <span className="sr-only">Loading theme</span>
+      </Button>
+    )
+  }
 
   return (
     <Button 

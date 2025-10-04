@@ -40,16 +40,30 @@ export function MobileMetaMaskHelper({ onConnect, onClose }: MobileMetaMaskHelpe
       const currentUrl = window.location.href;
       const metamaskUrl = `metamask://dapp/${currentUrl}`;
       
-      // Create a temporary link to try opening MetaMask
-      const link = document.createElement('a');
-      link.href = metamaskUrl;
-      link.target = '_blank';
-      link.click();
-      
-      // Fallback: show instructions
-      setTimeout(() => {
-        alert('If MetaMask app didn\'t open, please:\n1. Install MetaMask mobile app\n2. Open the app\n3. Use the browser inside MetaMask to visit this site');
-      }, 1000);
+      // Try multiple methods to open MetaMask
+      try {
+        // Method 1: Direct window.location
+        window.location.href = metamaskUrl;
+        
+        // Method 2: Create a temporary link as fallback
+        setTimeout(() => {
+          const link = document.createElement('a');
+          link.href = metamaskUrl;
+          link.target = '_blank';
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }, 500);
+        
+        // Method 3: Show instructions after delay
+        setTimeout(() => {
+          alert('If MetaMask app didn\'t open, please:\n1. Install MetaMask mobile app\n2. Open the app\n3. Use the browser inside MetaMask to visit this site');
+        }, 2000);
+      } catch (error) {
+        console.error('Error opening MetaMask app:', error);
+        alert('Please install MetaMask mobile app and open this site in the MetaMask browser');
+      }
     }
   };
 

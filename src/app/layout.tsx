@@ -32,7 +32,9 @@ export default function RootLayout({
         <ErrorBoundary>
           <ThemeProvider
             attribute="class"
-            defaultTheme="dark"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
           >
             {children}
             <Toaster />

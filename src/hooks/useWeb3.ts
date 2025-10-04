@@ -94,6 +94,21 @@ export const useWeb3 = () => {
     return typeof window !== 'undefined' && !!(window as any).ethereum;
   }, []);
 
+  // Check if we're on mobile
+  const isMobile = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  }, []);
+
+  // Check if MetaMask mobile app is available
+  const isMetaMaskMobileAvailable = useCallback(() => {
+    if (!isMobile()) return false;
+    
+    // Try to detect MetaMask mobile app
+    const userAgent = navigator.userAgent;
+    return userAgent.includes('MetaMask') || userAgent.includes('WebView');
+  }, [isMobile]);
+
   // Check if we're on the correct network (BSC Mainnet or Testnet)
   const isCorrectNetwork = useCallback((chainId: string) => {
     return chainId === BSC_CONFIG.chainId || chainId === BSC_TESTNET_CONFIG.chainId;
@@ -141,13 +156,37 @@ export const useWeb3 = () => {
 
   // Connect wallet
   const connect = useCallback(async () => {
-    if (!isMetaMaskInstalled()) {
-      throw new Error('MetaMask not installed');
-    }
-
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
+      // Handle mobile-specific connection logic
+      if (isMobile()) {
+        if (!isMetaMaskInstalled()) {
+          // On mobile, try to open MetaMask app or show instructions
+          const currentUrl = window.location.href;
+          const metamaskUrl = `metamask://dapp/${currentUrl}`;
+          
+          // Try to open MetaMask app
+          window.location.href = metamaskUrl;
+          
+          // Show fallback instructions after a delay
+          setTimeout(() => {
+            toast({
+              title: 'MetaMask Mobile Required',
+              description: 'Please install MetaMask mobile app and open this site in the MetaMask browser',
+              variant: 'destructive',
+            });
+          }, 2000);
+          
+          throw new Error('MetaMask mobile app required. Please install MetaMask and open this site in the MetaMask browser.');
+        }
+      } else {
+        // Desktop connection logic
+        if (!isMetaMaskInstalled()) {
+          throw new Error('MetaMask not installed. Please install the MetaMask browser extension.');
+        }
+      }
+
       // Request account access
       const accounts = await (window as any).ethereum.request({
         method: 'eth_requestAccounts',
@@ -217,15 +256,18 @@ export const useWeb3 = () => {
         error: errorMessage,
       }));
       
-      toast({
-        title: 'Connection Failed',
-        description: errorMessage,
-        variant: 'destructive',
-      });
+      // Don't show toast for mobile redirect attempts
+      if (!errorMessage.includes('MetaMask mobile app required')) {
+        toast({
+          title: 'Connection Failed',
+          description: errorMessage,
+          variant: 'destructive',
+        });
+      }
       
       throw error;
     }
-  }, [isMetaMaskInstalled, isCorrectNetwork, switchToBSC, toast]);
+  }, [isMetaMaskInstalled, isMobile, isCorrectNetwork, switchToBSC, toast]);
 
   // Disconnect wallet
   const disconnect = useCallback(() => {
@@ -394,6 +436,8 @@ export const useWeb3 = () => {
     switchToBSC,
     getNetworkConfig,
     isMetaMaskInstalled: isMetaMaskInstalled(),
+    isMobile: isMobile(),
+    isMetaMaskMobileAvailable: isMetaMaskMobileAvailable(),
     isCorrectNetwork: state.chainId ? isCorrectNetwork(state.chainId) : false,
     currentNetworkConfig: state.chainId ? getNetworkConfig(state.chainId) : null,
   };

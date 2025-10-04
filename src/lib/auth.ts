@@ -10,6 +10,7 @@ import {
 import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { mcpManager, createMCPContext, emitMCPEvent } from './mcp-pattern';
+import { FirebaseService, UserProfile as FirebaseUserProfile } from './firebaseService';
 
 export interface UserProfile {
   uid: string;
@@ -92,12 +93,19 @@ export class AuthService {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         
         if (isMobile) {
-          // Try to detect if MetaMask mobile app is installed
-          const metamaskDeepLink = 'metamask://dapp/';
+          // Try to open MetaMask app
           const currentUrl = window.location.href;
+          const metamaskUrl = `metamask://dapp/${currentUrl}`;
+          
+          // Try to redirect to MetaMask app
+          try {
+            window.location.href = metamaskUrl;
+          } catch (error) {
+            console.error('Failed to redirect to MetaMask app:', error);
+          }
           
           // If we can't detect MetaMask, provide helpful instructions
-          throw new Error('MetaMask not detected. Please install MetaMask mobile app or use MetaMask browser extension.');
+          throw new Error('MetaMask not detected. Please install MetaMask mobile app and open this site in the MetaMask browser.');
         } else {
           throw new Error('MetaMask not detected. Please install MetaMask browser extension.');
         }
@@ -170,6 +178,35 @@ export class AuthService {
     }
   }
 
+  async updateUserPreferences(uid: string, preferences: Partial<UserProfile['preferences']>): Promise<void> {
+    try {
+      // For now, we'll store preferences in localStorage since FirebaseService doesn't have a preferences field
+      // In a real implementation, you'd want to add preferences to the Firebase user document
+      const currentProfile = await this.getUserProfile(uid);
+      if (currentProfile) {
+        const updatedPreferences = { ...currentProfile.preferences, ...preferences };
+        localStorage.setItem(`user_preferences_${uid}`, JSON.stringify(updatedPreferences));
+      }
+    } catch (error) {
+      console.error('Error updating user preferences:', error);
+      throw error;
+    }
+  }
+
+  async getUserPreferences(uid: string): Promise<UserProfile['preferences']> {
+    try {
+      const stored = localStorage.getItem(`user_preferences_${uid}`);
+      if (stored) {
+        return JSON.parse(stored);
+      }
+      // Return default preferences
+      return { theme: 'dark', notifications: true, language: 'en' };
+    } catch (error) {
+      console.error('Error getting user preferences:', error);
+      return { theme: 'dark', notifications: true, language: 'en' };
+    }
+  }
+
   async getCurrentUser(): Promise<User | null> {
     return new Promise((resolve) => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -181,8 +218,27 @@ export class AuthService {
 
   async getUserProfile(uid: string): Promise<UserProfile | null> {
     try {
-      const userDoc = await getDoc(doc(db, 'users', uid));
-      return userDoc.exists() ? userDoc.data() as UserProfile : null;
+      const firebaseProfile = await FirebaseService.getUserProfile(uid);
+      if (!firebaseProfile) return null;
+      
+      // Get user preferences from localStorage
+      const preferences = await this.getUserPreferences(uid);
+      
+      // Convert Firebase profile to auth profile format
+      return {
+        uid: firebaseProfile.uid,
+        email: firebaseProfile.email,
+        displayName: firebaseProfile.displayName,
+        walletAddress: firebaseProfile.walletAddress,
+        level: 1, // Default level
+        experience: 0, // Default experience
+        totalTrades: firebaseProfile.totalTrades,
+        totalVolume: firebaseProfile.totalVolume,
+        achievements: firebaseProfile.achievements,
+        createdAt: firebaseProfile.createdAt?.toMillis?.() || Date.now(),
+        lastLogin: firebaseProfile.lastLoginAt?.toMillis?.() || Date.now(),
+        preferences
+      };
     } catch (error) {
       console.error('Error getting user profile:', error);
       return null;
@@ -190,61 +246,130 @@ export class AuthService {
   }
 
   private async createOrUpdateUserProfile(user: User): Promise<UserProfile> {
-    const userRef = doc(db, 'users', user.uid);
-    const userDoc = await getDoc(userRef);
-    const now = Date.now();
-    
-    if (userDoc.exists()) {
-      const updatedProfile = { lastLogin: now };
-      await updateDoc(userRef, updatedProfile);
-      return { ...userDoc.data(), ...updatedProfile } as UserProfile;
-    } else {
-      const newProfile: UserProfile = {
-        uid: user.uid,
-        email: user.email || '',
-        displayName: user.displayName || 'Anonymous User',
-        photoURL: user.photoURL || undefined,
-        level: 1,
-        experience: 0,
-        totalTrades: 0,
-        totalVolume: 0,
-        achievements: [],
-        createdAt: now,
-        lastLogin: now,
-        preferences: { theme: 'dark', notifications: true, language: 'en' },
-      };
-      await setDoc(userRef, newProfile);
-      return newProfile;
+    try {
+      // Check if user profile exists
+      const existingProfile = await FirebaseService.getUserProfile(user.uid);
+      
+      if (existingProfile) {
+        // Update last login
+        await FirebaseService.updateUserProfile(user.uid, {});
+        
+        // Return converted profile
+        return {
+          uid: existingProfile.uid,
+          email: existingProfile.email,
+          displayName: existingProfile.displayName,
+          walletAddress: existingProfile.walletAddress,
+          level: 1,
+          experience: 0,
+          totalTrades: existingProfile.totalTrades,
+          totalVolume: existingProfile.totalVolume,
+          achievements: existingProfile.achievements,
+          createdAt: existingProfile.createdAt?.toMillis?.() || Date.now(),
+          lastLogin: Date.now(),
+          preferences: { theme: 'dark', notifications: true, language: 'en' },
+        };
+      } else {
+        // Create new profile using FirebaseService
+        const newProfileData = {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || 'Anonymous User',
+          walletAddress: undefined,
+          isVerified: false,
+          tradingEnabled: true,
+          totalTrades: 0,
+          totalVolume: 0,
+          achievements: [],
+          referralCode: `REF${user.uid.slice(-8).toUpperCase()}`,
+        };
+        
+        await FirebaseService.createUserProfile(newProfileData);
+        
+        // Return converted profile
+        return {
+          uid: user.uid,
+          email: user.email || '',
+          displayName: user.displayName || 'Anonymous User',
+          walletAddress: undefined,
+          level: 1,
+          experience: 0,
+          totalTrades: 0,
+          totalVolume: 0,
+          achievements: [],
+          createdAt: Date.now(),
+          lastLogin: Date.now(),
+          preferences: { theme: 'dark', notifications: true, language: 'en' },
+        };
+      }
+    } catch (error) {
+      console.error('Error creating/updating user profile:', error);
+      throw error;
     }
   }
 
   private async createMetaMaskUserProfile(walletAddress: string): Promise<UserProfile> {
     const uid = `metamask_${walletAddress}`;
-    const userRef = doc(db, 'users', uid);
-    const userDoc = await getDoc(userRef);
-    const now = Date.now();
-
-    if (userDoc.exists()) {
-      const updatedProfile = { lastLogin: now };
-      await updateDoc(userRef, updatedProfile);
-      return { ...userDoc.data(), ...updatedProfile } as UserProfile;
-    } else {
-      const newProfile: UserProfile = {
-        uid,
-        email: '',
-        displayName: `Wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
-        walletAddress,
-        level: 1,
-        experience: 0,
-        totalTrades: 0,
-        totalVolume: 0,
-        achievements: [],
-        createdAt: now,
-        lastLogin: now,
-        preferences: { theme: 'dark', notifications: true, language: 'en' },
-      };
-      await setDoc(userRef, newProfile);
-      return newProfile;
+    
+    try {
+      // Check if user profile exists
+      const existingProfile = await FirebaseService.getUserProfile(uid);
+      
+      if (existingProfile) {
+        // Update last login
+        await FirebaseService.updateUserProfile(uid, {});
+        
+        // Return converted profile
+        return {
+          uid: existingProfile.uid,
+          email: existingProfile.email,
+          displayName: existingProfile.displayName,
+          walletAddress: existingProfile.walletAddress,
+          level: 1,
+          experience: 0,
+          totalTrades: existingProfile.totalTrades,
+          totalVolume: existingProfile.totalVolume,
+          achievements: existingProfile.achievements,
+          createdAt: existingProfile.createdAt?.toMillis?.() || Date.now(),
+          lastLogin: Date.now(),
+          preferences: { theme: 'dark', notifications: true, language: 'en' },
+        };
+      } else {
+        // Create new profile using FirebaseService
+        const newProfileData = {
+          uid,
+          email: '',
+          displayName: `Wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
+          walletAddress,
+          isVerified: false,
+          tradingEnabled: true,
+          totalTrades: 0,
+          totalVolume: 0,
+          achievements: [],
+          referralCode: `REF${uid.slice(-8).toUpperCase()}`,
+        };
+        
+        await FirebaseService.createUserProfile(newProfileData);
+        
+        // Return converted profile
+        return {
+          uid,
+          email: '',
+          displayName: `Wallet ${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`,
+          walletAddress,
+          level: 1,
+          experience: 0,
+          totalTrades: 0,
+          totalVolume: 0,
+          achievements: [],
+          createdAt: Date.now(),
+          lastLogin: Date.now(),
+          preferences: { theme: 'dark', notifications: true, language: 'en' },
+        };
+      }
+    } catch (error) {
+      console.error('Error creating/updating MetaMask user profile:', error);
+      throw error;
     }
   }
 }
@@ -283,5 +408,7 @@ export const useAuth = () => {
     signInWithGoogle: authService.signInWithGoogle.bind(authService),
     signInWithMetaMask: authService.signInWithMetaMask.bind(authService),
     signOut: authService.signOut.bind(authService),
+    updateUserPreferences: authService.updateUserPreferences.bind(authService),
+    getUserPreferences: authService.getUserPreferences.bind(authService),
   };
 };
