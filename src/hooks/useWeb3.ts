@@ -97,7 +97,12 @@ export const useWeb3 = () => {
   // Check if we're on mobile
   const isMobile = useCallback(() => {
     if (typeof window === 'undefined') return false;
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const mobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    console.log("🔍 [MOBILE DEBUG] Mobile detection:", {
+      userAgent: navigator.userAgent,
+      isMobile: mobile
+    });
+    return mobile;
   }, []);
 
   // Check if MetaMask mobile app is available
@@ -106,7 +111,12 @@ export const useWeb3 = () => {
     
     // Try to detect MetaMask mobile app
     const userAgent = navigator.userAgent;
-    return userAgent.includes('MetaMask') || userAgent.includes('WebView');
+    const hasMetaMask = userAgent.includes('MetaMask') || userAgent.includes('WebView');
+    console.log("🔍 [MOBILE DEBUG] MetaMask mobile detection:", {
+      userAgent,
+      hasMetaMask
+    });
+    return hasMetaMask;
   }, [isMobile]);
 
   // Check if we're on the correct network (BSC Mainnet or Testnet)
@@ -156,21 +166,34 @@ export const useWeb3 = () => {
 
   // Connect wallet
   const connect = useCallback(async () => {
+    console.log("🔍 [MOBILE DEBUG] Starting wallet connection process");
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
+      const mobile = isMobile();
+      const hasMetaMask = isMetaMaskInstalled();
+      
+      console.log("🔍 [MOBILE DEBUG] Connection environment:", {
+        isMobile: mobile,
+        hasMetaMask,
+        userAgent: navigator.userAgent
+      });
+
       // Handle mobile-specific connection logic
-      if (isMobile()) {
-        if (!isMetaMaskInstalled()) {
+      if (mobile) {
+        if (!hasMetaMask) {
           // On mobile, try to open MetaMask app or show instructions
           const currentUrl = window.location.href;
           const metamaskUrl = `metamask://dapp/${currentUrl}`;
+          
+          console.log("🔍 [MOBILE DEBUG] Attempting to open MetaMask app:", metamaskUrl);
           
           // Try to open MetaMask app
           window.location.href = metamaskUrl;
           
           // Show fallback instructions after a delay
           setTimeout(() => {
+            console.log("🔍 [MOBILE DEBUG] Showing fallback instructions");
             toast({
               title: 'MetaMask Mobile Required',
               description: 'Please install MetaMask mobile app and open this site in the MetaMask browser',
@@ -182,25 +205,38 @@ export const useWeb3 = () => {
         }
       } else {
         // Desktop connection logic
-        if (!isMetaMaskInstalled()) {
+        if (!hasMetaMask) {
+          console.log("🔍 [MOBILE DEBUG] Desktop: MetaMask not installed");
           throw new Error('MetaMask not installed. Please install the MetaMask browser extension.');
         }
       }
 
       // Request account access
+      console.log("🔍 [MOBILE DEBUG] Requesting account access");
       const accounts = await (window as any).ethereum.request({
         method: 'eth_requestAccounts',
       });
 
+      console.log("🔍 [MOBILE DEBUG] Accounts received:", accounts);
+
       if (accounts.length === 0) {
+        console.log("🔍 [MOBILE DEBUG] No accounts found");
         throw new Error('No accounts found');
       }
 
       const account = accounts[0];
+      console.log("🔍 [MOBILE DEBUG] Using account:", account);
+      
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
       const network = await provider.getNetwork();
       const balance = await provider.getBalance(account);
+      
+      console.log("🔍 [MOBILE DEBUG] Wallet details:", {
+        account,
+        chainId: network.chainId.toString(),
+        balance: ethers.formatEther(balance)
+      });
 
       // Check if we're on the correct network
       if (!isCorrectNetwork(network.chainId.toString())) {
@@ -250,6 +286,13 @@ export const useWeb3 = () => {
 
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to connect wallet';
+      console.error("🔍 [MOBILE DEBUG] Connection failed:", {
+        error: errorMessage,
+        stack: error.stack,
+        isMobile: isMobile(),
+        hasMetaMask: isMetaMaskInstalled()
+      });
+      
       setState(prev => ({
         ...prev,
         isConnecting: false,

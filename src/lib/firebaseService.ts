@@ -17,6 +17,7 @@ export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
+  username?: string;
   walletAddress?: string;
   createdAt: any;
   lastLoginAt: any;
@@ -27,6 +28,11 @@ export interface UserProfile {
   achievements: string[];
   referralCode: string;
   referredBy?: string;
+  preferences?: {
+    theme: 'light' | 'dark';
+    notifications: boolean;
+    language: string;
+  };
 }
 
 export class FirebaseService {
@@ -62,12 +68,14 @@ export class FirebaseService {
   // User Management
   static async createUserProfile(userData: Partial<UserProfile>): Promise<void> {
     try {
+      console.log("🔍 [FIREBASE DEBUG] Creating user profile:", userData);
+      
       if (!userData.uid) {
         throw new Error('User ID is required');
       }
 
       const userRef = doc(db, 'users', userData.uid);
-      await setDoc(userRef, {
+      const profileData = {
         ...userData,
         createdAt: serverTimestamp(),
         lastLoginAt: serverTimestamp(),
@@ -76,37 +84,61 @@ export class FirebaseService {
         achievements: [],
         isVerified: false,
         tradingEnabled: true,
-      }, { merge: true });
+        preferences: {
+          theme: 'dark',
+          notifications: true,
+          language: 'en',
+          ...userData.preferences
+        }
+      };
+      
+      console.log("🔍 [FIREBASE DEBUG] Profile data to save:", profileData);
+      
+      await setDoc(userRef, profileData, { merge: true });
+      console.log("🔍 [FIREBASE DEBUG] User profile created successfully");
     } catch (error) {
-      console.error('Error creating user profile:', error);
+      console.error("🔍 [FIREBASE DEBUG] Error creating user profile:", error);
       throw error;
     }
   }
 
   static async getUserProfile(uid: string): Promise<UserProfile | null> {
     try {
+      console.log("🔍 [FIREBASE DEBUG] Getting user profile:", uid);
+      
       const userRef = doc(db, 'users', uid);
       const userSnap = await getDoc(userRef);
       
       if (userSnap.exists()) {
-        return userSnap.data() as UserProfile;
+        const profileData = userSnap.data() as UserProfile;
+        console.log("🔍 [FIREBASE DEBUG] User profile retrieved:", profileData);
+        return profileData;
       }
+      
+      console.log("🔍 [FIREBASE DEBUG] User profile not found");
       return null;
     } catch (error) {
-      console.error('Error getting user profile:', error);
+      console.error("🔍 [FIREBASE DEBUG] Error getting user profile:", error);
       throw error;
     }
   }
 
   static async updateUserProfile(uid: string, updates: Partial<UserProfile>): Promise<void> {
     try {
+      console.log("🔍 [FIREBASE DEBUG] Updating user profile:", { uid, updates });
+      
       const userRef = doc(db, 'users', uid);
-      await updateDoc(userRef, {
+      const updateData = {
         ...updates,
         lastLoginAt: serverTimestamp(),
-      });
+      };
+      
+      console.log("🔍 [FIREBASE DEBUG] Update data:", updateData);
+      
+      await updateDoc(userRef, updateData);
+      console.log("🔍 [FIREBASE DEBUG] User profile updated successfully");
     } catch (error) {
-      console.error('Error updating user profile:', error);
+      console.error("🔍 [FIREBASE DEBUG] Error updating user profile:", error);
       throw error;
     }
   }

@@ -180,29 +180,57 @@ export class AuthService {
 
   async updateUserPreferences(uid: string, preferences: Partial<UserProfile['preferences']>): Promise<void> {
     try {
-      // For now, we'll store preferences in localStorage since FirebaseService doesn't have a preferences field
-      // In a real implementation, you'd want to add preferences to the Firebase user document
+      console.log("🔍 [FIREBASE DEBUG] Updating user preferences:", { uid, preferences });
+      
+      // Store preferences in localStorage for immediate access
       const currentProfile = await this.getUserProfile(uid);
       if (currentProfile) {
         const updatedPreferences = { ...currentProfile.preferences, ...preferences };
         localStorage.setItem(`user_preferences_${uid}`, JSON.stringify(updatedPreferences));
+        console.log("🔍 [FIREBASE DEBUG] Preferences stored in localStorage:", updatedPreferences);
+      }
+      
+      // Also update Firebase user document with preferences
+      try {
+        await FirebaseService.updateUserProfile(uid, {
+          preferences: preferences
+        });
+        console.log("🔍 [FIREBASE DEBUG] Preferences saved to Firebase successfully");
+      } catch (firebaseError) {
+        console.error("🔍 [FIREBASE DEBUG] Failed to save preferences to Firebase:", firebaseError);
+        // Don't throw error, localStorage backup is sufficient
       }
     } catch (error) {
-      console.error('Error updating user preferences:', error);
+      console.error("🔍 [FIREBASE DEBUG] Error updating user preferences:", error);
       throw error;
     }
   }
 
   async getUserPreferences(uid: string): Promise<UserProfile['preferences']> {
     try {
+      console.log("🔍 [FIREBASE DEBUG] Getting user preferences:", uid);
+      
+      // First try to get from Firebase
+      const firebaseProfile = await FirebaseService.getUserProfile(uid);
+      if (firebaseProfile?.preferences) {
+        console.log("🔍 [FIREBASE DEBUG] Preferences loaded from Firebase:", firebaseProfile.preferences);
+        return firebaseProfile.preferences;
+      }
+      
+      // Fallback to localStorage
       const stored = localStorage.getItem(`user_preferences_${uid}`);
       if (stored) {
-        return JSON.parse(stored);
+        const preferences = JSON.parse(stored);
+        console.log("🔍 [FIREBASE DEBUG] Preferences loaded from localStorage:", preferences);
+        return preferences;
       }
+      
       // Return default preferences
-      return { theme: 'dark', notifications: true, language: 'en' };
+      const defaultPreferences = { theme: 'dark', notifications: true, language: 'en' };
+      console.log("🔍 [FIREBASE DEBUG] Using default preferences:", defaultPreferences);
+      return defaultPreferences;
     } catch (error) {
-      console.error('Error getting user preferences:', error);
+      console.error("🔍 [FIREBASE DEBUG] Error getting user preferences:", error);
       return { theme: 'dark', notifications: true, language: 'en' };
     }
   }

@@ -3,6 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
+import { ThemeDebug } from "@/components/theme-debug";
+import { DebugDashboard } from "@/components/debug-dashboard";
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 
@@ -32,12 +34,15 @@ export default function RootLayout({
         <ErrorBoundary>
           <ThemeProvider
             attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
+            defaultTheme="dark"
+            enableSystem={false}
+            disableTransitionOnChange={false}
+            storageKey="dreamcoin-theme"
           >
             {children}
             <Toaster />
+            <ThemeDebug />
+            <DebugDashboard />
           </ThemeProvider>
         </ErrorBoundary>
       </body>

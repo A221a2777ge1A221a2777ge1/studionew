@@ -7,10 +7,107 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { User, Wallet, Bell, Shield, LogOut, Gift, Users, Trophy, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth";
+import { FirebaseService } from "@/lib/firebaseService";
+import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/logo";
 
 export default function ProfilePage() {
+  const { user, userProfile, loading } = useAuth();
+  const { toast } = useToast();
+  const [username, setUsername] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
   const totalRewards = 12500;
+
+  // Debug: Log user profile data
+  useEffect(() => {
+    console.log("🔍 [PROFILE DEBUG] User profile loaded:", {
+      user: user ? { uid: user.uid, email: user.email } : null,
+      userProfile: userProfile ? {
+        uid: userProfile.uid,
+        displayName: userProfile.displayName,
+        username: userProfile.username,
+        walletAddress: userProfile.walletAddress
+      } : null,
+      loading
+    });
+  }, [user, userProfile, loading]);
+
+  // Initialize username from user profile
+  useEffect(() => {
+    if (userProfile) {
+      const currentUsername = userProfile.username || userProfile.displayName || "You";
+      setUsername(currentUsername);
+      console.log("🔍 [PROFILE DEBUG] Username initialized:", currentUsername);
+    }
+  }, [userProfile]);
+
+  const handleUsernameChange = (value: string) => {
+    console.log("🔍 [PROFILE DEBUG] Username changed:", { from: username, to: value });
+    setUsername(value);
+    setHasChanges(value !== (userProfile?.username || userProfile?.displayName || "You"));
+  };
+
+  const handleSaveChanges = async () => {
+    if (!user || !userProfile) {
+      console.error("🔍 [PROFILE DEBUG] Cannot save: No user or userProfile");
+      toast({
+        title: "Error",
+        description: "Please log in to save changes",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    console.log("🔍 [PROFILE DEBUG] Starting save process:", {
+      uid: user.uid,
+      newUsername: username,
+      hasChanges
+    });
+
+    try {
+      // Update username in Firebase
+      await FirebaseService.updateUserProfile(user.uid, {
+        displayName: username,
+        username: username
+      });
+
+      console.log("🔍 [PROFILE DEBUG] Username saved successfully to Firebase");
+      
+      toast({
+        title: "Success",
+        description: "Profile updated successfully!",
+      });
+      
+      setHasChanges(false);
+    } catch (error) {
+      console.error("🔍 [PROFILE DEBUG] Save failed:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save changes. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="container py-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+            <p>Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-8">
        <h1 className="text-3xl font-bold mb-6">Profile & Settings</h1>
@@ -90,7 +187,12 @@ export default function ProfilePage() {
 
                     <div className="space-y-2">
                         <Label htmlFor="username">Username</Label>
-                        <Input id="username" defaultValue="You" />
+                        <Input 
+                            id="username" 
+                            value={username}
+                            onChange={(e) => handleUsernameChange(e.target.value)}
+                            placeholder="Enter your username"
+                        />
                     </div>
 
                     <div className="space-y-2">
@@ -115,7 +217,13 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
              <div className="mt-8 flex justify-end">
-                <Button size="lg">Save Changes</Button>
+                <Button 
+                    size="lg" 
+                    onClick={handleSaveChanges}
+                    disabled={!hasChanges || isSaving}
+                >
+                    {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
             </div>
         </div>
        </div>
