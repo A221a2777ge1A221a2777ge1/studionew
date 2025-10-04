@@ -115,23 +115,32 @@ export const useWeb3 = () => {
   // Check if MetaMask mobile app is available (memoized)
   const [isMetaMaskMobile, setIsMetaMaskMobile] = useState<boolean>(false);
   
+  // Function to check MetaMask availability
+  const checkMetaMaskAvailability = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    
+    const userAgent = navigator.userAgent;
+    const hasMetaMask = userAgent.includes('MetaMask') || 
+                       userAgent.includes('WebView') ||
+                       (window as any).ethereum?.isMetaMask ||
+                       !!(window as any).ethereum;
+    
+    console.log("🔍 [MOBILE DEBUG] MetaMask availability check:", {
+      userAgent,
+      hasMetaMask,
+      ethereum: !!(window as any).ethereum,
+      isMetaMask: !!(window as any).ethereum?.isMetaMask
+    });
+    
+    return hasMetaMask;
+  }, []);
+  
   useEffect(() => {
-    if (isMobileDevice && typeof window !== 'undefined') {
-      const userAgent = navigator.userAgent;
-      // More comprehensive MetaMask mobile detection
-      const hasMetaMask = userAgent.includes('MetaMask') || 
-                         userAgent.includes('WebView') ||
-                         userAgent.includes('Mobile') ||
-                         (window as any).ethereum?.isMetaMask;
-      console.log("🔍 [MOBILE DEBUG] MetaMask mobile detection (initial):", {
-        userAgent,
-        hasMetaMask,
-        ethereum: !!(window as any).ethereum,
-        isMetaMask: !!(window as any).ethereum?.isMetaMask
-      });
+    if (isMobileDevice) {
+      const hasMetaMask = checkMetaMaskAvailability();
       setIsMetaMaskMobile(hasMetaMask);
     }
-  }, [isMobileDevice]);
+  }, [isMobileDevice, checkMetaMaskAvailability]);
 
   const isMetaMaskMobileAvailable = useCallback(() => isMetaMaskMobile, [isMetaMaskMobile]);
 
@@ -221,7 +230,13 @@ export const useWeb3 = () => {
           link.click();
           document.body.removeChild(link);
           
+          // Set a flag to indicate we're waiting for MetaMask
+          localStorage.setItem('waiting_for_metamask', 'true');
+          
           throw new Error('MetaMask mobile app required. Please install MetaMask and open this site in the MetaMask browser.');
+        } else {
+          // MetaMask is available on mobile, clear the waiting flag
+          localStorage.removeItem('waiting_for_metamask');
         }
       } else {
         // Desktop connection logic
@@ -488,6 +503,95 @@ export const useWeb3 = () => {
 
     checkConnection();
   }, [isMetaMaskInstalled, connect]);
+
+  // Listen for page visibility changes and focus events to detect when user returns from MetaMask app
+  useEffect(() => {
+    if (!isMobileDevice) return;
+
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === 'visible') {
+        console.log("🔍 [MOBILE DEBUG] Page became visible, checking MetaMask availability");
+        
+        // Re-check MetaMask availability when page becomes visible
+        const hasMetaMask = checkMetaMaskAvailability();
+        setIsMetaMaskMobile(hasMetaMask);
+        
+        // If MetaMask is now available and we're not connected, try to connect
+        if (hasMetaMask && !state.isConnected && !state.isConnecting) {
+          console.log("🔍 [MOBILE DEBUG] MetaMask detected after page visibility change, attempting connection");
+          try {
+            await connect();
+          } catch (error) {
+            console.log("🔍 [MOBILE DEBUG] Auto-connection failed:", error);
+          }
+        }
+      }
+    };
+
+    const handleFocus = async () => {
+      console.log("🔍 [MOBILE DEBUG] Window focused, checking MetaMask availability");
+      
+      // Re-check MetaMask availability when window gains focus
+      const hasMetaMask = checkMetaMaskAvailability();
+      setIsMetaMaskMobile(hasMetaMask);
+      
+      // If MetaMask is now available and we're not connected, try to connect
+      if (hasMetaMask && !state.isConnected && !state.isConnecting) {
+        console.log("🔍 [MOBILE DEBUG] MetaMask detected after focus, attempting connection");
+        try {
+          await connect();
+        } catch (error) {
+          console.log("🔍 [MOBILE DEBUG] Auto-connection failed:", error);
+        }
+      }
+    };
+
+    // Add event listeners
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [isMobileDevice, checkMetaMaskAvailability, state.isConnected, state.isConnecting, connect]);
+
+  // Periodic check for MetaMask availability when waiting for it
+  useEffect(() => {
+    if (!isMobileDevice) return;
+
+    const isWaitingForMetaMask = localStorage.getItem('waiting_for_metamask') === 'true';
+    if (!isWaitingForMetaMask) return;
+
+    console.log("🔍 [MOBILE DEBUG] Waiting for MetaMask, starting periodic checks");
+    
+    const checkInterval = setInterval(async () => {
+      const hasMetaMask = checkMetaMaskAvailability();
+      setIsMetaMaskMobile(hasMetaMask);
+      
+      if (hasMetaMask && !state.isConnected && !state.isConnecting) {
+        console.log("🔍 [MOBILE DEBUG] MetaMask detected during periodic check, attempting connection");
+        try {
+          await connect();
+          localStorage.removeItem('waiting_for_metamask');
+          clearInterval(checkInterval);
+        } catch (error) {
+          console.log("🔍 [MOBILE DEBUG] Auto-connection failed during periodic check:", error);
+        }
+      }
+    }, 2000); // Check every 2 seconds
+
+    // Clear interval after 30 seconds to avoid infinite checking
+    const timeout = setTimeout(() => {
+      clearInterval(checkInterval);
+      localStorage.removeItem('waiting_for_metamask');
+    }, 30000);
+
+    return () => {
+      clearInterval(checkInterval);
+      clearTimeout(timeout);
+    };
+  }, [isMobileDevice, checkMetaMaskAvailability, state.isConnected, state.isConnecting, connect]);
 
   return {
     ...state,
