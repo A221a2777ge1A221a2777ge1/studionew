@@ -56,14 +56,7 @@ export function MobileWalletConnector({ onConnect, onClose, isOpen = false }: Mo
         // Set flag to indicate we're waiting for MetaMask
         localStorage.setItem('waiting_for_metamask', 'true');
         
-        // Show a more helpful message
-        toast({
-          title: 'Opening MetaMask...',
-          description: 'If MetaMask app doesn\'t open, please install it and try again',
-          variant: 'default',
-        });
-        
-        // Close the dialog since we're redirecting
+        // Close the dialog silently - no popup messages
         setShowDialog(false);
         onClose?.();
       } catch (error) {

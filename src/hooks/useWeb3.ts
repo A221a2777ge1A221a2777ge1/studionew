@@ -222,34 +222,26 @@ export const useWeb3 = () => {
             console.log("🔍 [MOBILE DEBUG] Direct redirect failed:", error);
           }
           
-          // Method 2: Create a temporary link to trigger the app
-          setTimeout(() => {
-            const link = document.createElement('a');
-            link.href = metamaskUrl;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-          }, 100);
+          // Method 2: Create a temporary link to trigger the app (immediate)
+          const link = document.createElement('a');
+          link.href = metamaskUrl;
+          link.style.display = 'none';
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
           
-          // Method 3: Try using window.open as fallback
-          setTimeout(() => {
-            try {
-              window.open(metamaskUrl, '_blank');
-            } catch (error) {
-              console.log("🔍 [MOBILE DEBUG] Window.open fallback failed:", error);
-            }
-          }, 500);
+          // Method 3: Try using window.open as fallback (immediate)
+          try {
+            window.open(metamaskUrl, '_blank');
+          } catch (error) {
+            console.log("🔍 [MOBILE DEBUG] Window.open fallback failed:", error);
+          }
           
           // Set a flag to indicate we're waiting for MetaMask
           localStorage.setItem('waiting_for_metamask', 'true');
           
-          // Show a more helpful message instead of an error
-          toast({
-            title: 'Opening MetaMask...',
-            description: 'If MetaMask app doesn\'t open, please install it and try again',
-            variant: 'default',
-          });
+          // Don't show any popup messages - let the background detection handle it
+          console.log("🔍 [MOBILE DEBUG] MetaMask not detected, attempting silent redirect");
           
           // Don't throw an error, just return early to allow the waiting mechanism to work
           setState(prev => ({ ...prev, isConnecting: false }));
@@ -524,6 +516,32 @@ export const useWeb3 = () => {
     checkConnection();
   }, [isMetaMaskInstalled, connect]);
 
+  // Check for MetaMask availability on mobile when waiting for it
+  useEffect(() => {
+    if (!isMobileDevice) return;
+
+    const isWaitingForMetaMask = localStorage.getItem('waiting_for_metamask') === 'true';
+    if (!isWaitingForMetaMask) return;
+
+    // Immediate check when component mounts
+    const immediateCheck = async () => {
+      const hasMetaMask = checkMetaMaskAvailability();
+      setIsMetaMaskMobile(hasMetaMask);
+      
+      if (hasMetaMask && !state.isConnected && !state.isConnecting) {
+        console.log("🔍 [MOBILE DEBUG] MetaMask detected on immediate check, attempting connection");
+        try {
+          await connect();
+          localStorage.removeItem('waiting_for_metamask');
+        } catch (error) {
+          console.log("🔍 [MOBILE DEBUG] Immediate auto-connection failed:", error);
+        }
+      }
+    };
+
+    immediateCheck();
+  }, [isMobileDevice, checkMetaMaskAvailability, state.isConnected, state.isConnecting, connect]);
+
   // Listen for page visibility changes and focus events to detect when user returns from MetaMask app
   useEffect(() => {
     if (!isMobileDevice) return;
@@ -599,7 +617,7 @@ export const useWeb3 = () => {
           console.log("🔍 [MOBILE DEBUG] Auto-connection failed during periodic check:", error);
         }
       }
-    }, 2000); // Check every 2 seconds
+    }, 1000); // Check every 1 second for faster detection
 
     // Clear interval after 30 seconds to avoid infinite checking
     const timeout = setTimeout(() => {

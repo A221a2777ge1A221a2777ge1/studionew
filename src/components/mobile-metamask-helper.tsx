@@ -61,13 +61,11 @@ export function MobileMetaMaskHelper({ onConnect, onClose }: MobileMetaMaskHelpe
           document.body.removeChild(link);
         }, 500);
         
-        // Method 3: Show instructions after delay
-        setTimeout(() => {
-          alert('If MetaMask app didn\'t open, please:\n1. Install MetaMask mobile app\n2. Open the app\n3. Use the browser inside MetaMask to visit this site\n\nAfter opening in MetaMask, the connection should happen automatically.\n\nIf you already have MetaMask installed, try:\n- Opening MetaMask app first\n- Then using the browser inside MetaMask to visit this site');
-        }, 2000);
+        // No popup messages - let the background detection handle connection
+        console.log("🔍 [MOBILE DEBUG] MetaMask app opening attempted, background detection will handle connection");
       } catch (error) {
         console.error('Error opening MetaMask app:', error);
-        alert('Please install MetaMask mobile app and open this site in the MetaMask browser');
+        // No popup messages - let the background detection handle connection
       }
     }
   };
