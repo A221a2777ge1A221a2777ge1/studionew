@@ -120,16 +120,26 @@ export const useWeb3 = () => {
     if (typeof window === 'undefined') return false;
     
     const userAgent = navigator.userAgent;
+    const ethereum = (window as any).ethereum;
     const hasMetaMask = userAgent.includes('MetaMask') || 
                        userAgent.includes('WebView') ||
-                       (window as any).ethereum?.isMetaMask ||
-                       !!(window as any).ethereum;
+                       ethereum?.isMetaMask ||
+                       !!ethereum;
     
+    // Comprehensive debug logging
     console.log("🔍 [MOBILE DEBUG] MetaMask availability check:", {
-      userAgent,
-      hasMetaMask,
-      ethereum: !!(window as any).ethereum,
-      isMetaMask: !!(window as any).ethereum?.isMetaMask
+      timestamp: new Date().toISOString(),
+      userAgent: userAgent,
+      hasMetaMask: hasMetaMask,
+      ethereum: !!ethereum,
+      isMetaMask: ethereum?.isMetaMask,
+      ethereumKeys: ethereum ? Object.keys(ethereum) : [],
+      ethereumMethods: ethereum ? Object.getOwnPropertyNames(ethereum) : [],
+      windowKeys: Object.keys(window).filter(key => key.includes('eth') || key.includes('web3')),
+      localStorage: {
+        waiting_for_metamask: localStorage.getItem('waiting_for_metamask'),
+        metamask_redirect_time: localStorage.getItem('metamask_redirect_time')
+      }
     });
     
     return hasMetaMask;
@@ -198,10 +208,36 @@ export const useWeb3 = () => {
       const mobile = isMobile();
       const hasMetaMask = isMetaMaskInstalled();
       
-      // Only log connection environment once per connection attempt
+      // Comprehensive connection environment logging
       console.log("🔍 [MOBILE DEBUG] Connection environment:", {
+        timestamp: new Date().toISOString(),
         isMobile: mobile,
-        hasMetaMask
+        hasMetaMask: hasMetaMask,
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        cookieEnabled: navigator.cookieEnabled,
+        onLine: navigator.onLine,
+        currentUrl: window.location.href,
+        referrer: document.referrer,
+        ethereum: {
+          exists: !!(window as any).ethereum,
+          isMetaMask: (window as any).ethereum?.isMetaMask,
+          selectedAddress: (window as any).ethereum?.selectedAddress,
+          chainId: (window as any).ethereum?.chainId,
+          networkVersion: (window as any).ethereum?.networkVersion,
+          isConnected: (window as any).ethereum?.isConnected?.(),
+          providers: (window as any).ethereum?.providers
+        },
+        localStorage: {
+          waiting_for_metamask: localStorage.getItem('waiting_for_metamask'),
+          metamask_redirect_time: localStorage.getItem('metamask_redirect_time'),
+          theme: localStorage.getItem('theme'),
+          allKeys: Object.keys(localStorage)
+        },
+        sessionStorage: {
+          allKeys: Object.keys(sessionStorage)
+        }
       });
 
       // Handle mobile-specific connection logic
@@ -213,22 +249,41 @@ export const useWeb3 = () => {
           const currentUrl = encodeURIComponent(window.location.href);
           const metamaskUrl = `metamask://dapp/${currentUrl}`;
           
-          console.log("🔍 [MOBILE DEBUG] Attempting to open MetaMask app:", metamaskUrl);
+          console.log("🔍 [MOBILE DEBUG] Attempting to open MetaMask app:", {
+            timestamp: new Date().toISOString(),
+            currentUrl: window.location.href,
+            encodedUrl: currentUrl,
+            metamaskUrl: metamaskUrl,
+            protocol: window.location.protocol,
+            host: window.location.host,
+            pathname: window.location.pathname,
+            search: window.location.search,
+            hash: window.location.hash
+          });
           
           // Store the current timestamp to track when we initiated the redirect
-          localStorage.setItem('metamask_redirect_time', Date.now().toString());
+          const redirectTime = Date.now().toString();
+          localStorage.setItem('metamask_redirect_time', redirectTime);
+          console.log("🔍 [MOBILE DEBUG] Stored redirect timestamp:", redirectTime);
           
           // Method 1: Try the proper MetaMask deep link format
           try {
+            console.log("🔍 [MOBILE DEBUG] Method 1: Creating iframe for deep link");
             // Use a more reliable approach for mobile deep linking
             const iframe = document.createElement('iframe');
             iframe.style.display = 'none';
             iframe.src = metamaskUrl;
             document.body.appendChild(iframe);
+            console.log("🔍 [MOBILE DEBUG] Iframe created and added to DOM");
             
             // Remove iframe after a short delay
             setTimeout(() => {
-              document.body.removeChild(iframe);
+              try {
+                document.body.removeChild(iframe);
+                console.log("🔍 [MOBILE DEBUG] Iframe removed from DOM");
+              } catch (error) {
+                console.log("🔍 [MOBILE DEBUG] Error removing iframe:", error);
+              }
             }, 1000);
           } catch (error) {
             console.log("🔍 [MOBILE DEBUG] Iframe method failed:", error);
@@ -236,18 +291,28 @@ export const useWeb3 = () => {
           
           // Method 2: Direct window.location as fallback
           try {
+            console.log("🔍 [MOBILE DEBUG] Method 2: Direct window.location redirect");
             window.location.href = metamaskUrl;
+            console.log("🔍 [MOBILE DEBUG] Window.location redirect attempted");
           } catch (error) {
             console.log("🔍 [MOBILE DEBUG] Direct redirect failed:", error);
           }
           
           // Method 3: Create a temporary link to trigger the app
-          const link = document.createElement('a');
-          link.href = metamaskUrl;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          try {
+            console.log("🔍 [MOBILE DEBUG] Method 3: Creating temporary link");
+            const link = document.createElement('a');
+            link.href = metamaskUrl;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            console.log("🔍 [MOBILE DEBUG] Link created and added to DOM");
+            link.click();
+            console.log("🔍 [MOBILE DEBUG] Link clicked");
+            document.body.removeChild(link);
+            console.log("🔍 [MOBILE DEBUG] Link removed from DOM");
+          } catch (error) {
+            console.log("🔍 [MOBILE DEBUG] Link method failed:", error);
+          }
           
           // Set a flag to indicate we're waiting for MetaMask
           localStorage.setItem('waiting_for_metamask', 'true');
@@ -559,12 +624,27 @@ export const useWeb3 = () => {
     if (!isMobileDevice) return;
 
     const handleVisibilityChange = async () => {
+      console.log("🔍 [MOBILE DEBUG] Page visibility changed:", {
+        timestamp: new Date().toISOString(),
+        visibilityState: document.visibilityState,
+        hidden: document.hidden,
+        isConnected: state.isConnected,
+        isConnecting: state.isConnecting
+      });
+      
       if (document.visibilityState === 'visible') {
         console.log("🔍 [MOBILE DEBUG] Page became visible, checking MetaMask availability");
         
         // Re-check MetaMask availability when page becomes visible
         const hasMetaMask = checkMetaMaskAvailability();
         setIsMetaMaskMobile(hasMetaMask);
+        
+        console.log("🔍 [MOBILE DEBUG] Visibility change - MetaMask check result:", {
+          hasMetaMask: hasMetaMask,
+          isConnected: state.isConnected,
+          isConnecting: state.isConnecting,
+          shouldAttemptConnection: hasMetaMask && !state.isConnected && !state.isConnecting
+        });
         
         // If MetaMask is now available and we're not connected, try to connect
         if (hasMetaMask && !state.isConnected && !state.isConnecting) {
@@ -584,6 +664,13 @@ export const useWeb3 = () => {
       // Re-check MetaMask availability when window gains focus
       const hasMetaMask = checkMetaMaskAvailability();
       setIsMetaMaskMobile(hasMetaMask);
+      
+      console.log("🔍 [MOBILE DEBUG] Focus change - MetaMask check result:", {
+        hasMetaMask: hasMetaMask,
+        isConnected: state.isConnected,
+        isConnecting: state.isConnecting,
+        shouldAttemptConnection: hasMetaMask && !state.isConnected && !state.isConnecting
+      });
       
       // If MetaMask is now available and we're not connected, try to connect
       if (hasMetaMask && !state.isConnected && !state.isConnecting) {
@@ -618,8 +705,22 @@ export const useWeb3 = () => {
     let checkCount = 0;
     const checkInterval = setInterval(async () => {
       checkCount++;
+      console.log(`🔍 [MOBILE DEBUG] Periodic check #${checkCount}`, {
+        timestamp: new Date().toISOString(),
+        checkCount: checkCount,
+        isConnected: state.isConnected,
+        isConnecting: state.isConnecting
+      });
+      
       const hasMetaMask = checkMetaMaskAvailability();
       setIsMetaMaskMobile(hasMetaMask);
+      
+      console.log(`🔍 [MOBILE DEBUG] Periodic check #${checkCount} result:`, {
+        hasMetaMask: hasMetaMask,
+        isConnected: state.isConnected,
+        isConnecting: state.isConnecting,
+        shouldAttemptConnection: hasMetaMask && !state.isConnected && !state.isConnecting
+      });
       
       if (hasMetaMask && !state.isConnected && !state.isConnecting) {
         console.log("🔍 [MOBILE DEBUG] MetaMask detected during periodic check, attempting connection");
@@ -628,6 +729,7 @@ export const useWeb3 = () => {
           localStorage.removeItem('waiting_for_metamask');
           localStorage.removeItem('metamask_redirect_time');
           clearInterval(checkInterval);
+          console.log("🔍 [MOBILE DEBUG] Connection successful, cleared interval and localStorage");
         } catch (error) {
           console.log("🔍 [MOBILE DEBUG] Auto-connection failed during periodic check:", error);
         }
