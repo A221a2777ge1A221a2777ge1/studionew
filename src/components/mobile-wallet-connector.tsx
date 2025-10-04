@@ -50,13 +50,34 @@ export function MobileWalletConnector({ onConnect, onClose, isOpen = false }: Mo
       console.log("🔍 [MOBILE DEBUG] Opening MetaMask app with URL:", metamaskUrl);
       
       try {
-        // Try to open MetaMask app
+        // Store timestamp for tracking
+        localStorage.setItem('metamask_redirect_time', Date.now().toString());
+        
+        // Try to open MetaMask app using iframe method (more reliable)
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = metamaskUrl;
+        document.body.appendChild(iframe);
+        
+        // Remove iframe after delay
+        setTimeout(() => {
+          document.body.removeChild(iframe);
+        }, 1000);
+        
+        // Also try direct redirect as fallback
         window.location.href = metamaskUrl;
         
         // Set flag to indicate we're waiting for MetaMask
         localStorage.setItem('waiting_for_metamask', 'true');
         
-        // Close the dialog silently - no popup messages
+        // Show helpful message
+        toast({
+          title: 'Opening MetaMask...',
+          description: 'After connecting in MetaMask, return to this website to complete the connection',
+          variant: 'default',
+        });
+        
+        // Close the dialog
         setShowDialog(false);
         onClose?.();
       } catch (error) {

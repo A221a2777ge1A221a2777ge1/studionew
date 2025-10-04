@@ -209,33 +209,45 @@ export const useWeb3 = () => {
         if (!hasMetaMask) {
           console.log("🔍 [MOBILE DEBUG] Mobile: MetaMask not detected, attempting to open MetaMask app");
           
-          // Try to open MetaMask app using multiple methods
+          // Try to open MetaMask app using proper deep linking
           const currentUrl = encodeURIComponent(window.location.href);
           const metamaskUrl = `metamask://dapp/${currentUrl}`;
           
           console.log("🔍 [MOBILE DEBUG] Attempting to open MetaMask app:", metamaskUrl);
           
-          // Method 1: Direct window.location
+          // Store the current timestamp to track when we initiated the redirect
+          localStorage.setItem('metamask_redirect_time', Date.now().toString());
+          
+          // Method 1: Try the proper MetaMask deep link format
+          try {
+            // Use a more reliable approach for mobile deep linking
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = metamaskUrl;
+            document.body.appendChild(iframe);
+            
+            // Remove iframe after a short delay
+            setTimeout(() => {
+              document.body.removeChild(iframe);
+            }, 1000);
+          } catch (error) {
+            console.log("🔍 [MOBILE DEBUG] Iframe method failed:", error);
+          }
+          
+          // Method 2: Direct window.location as fallback
           try {
             window.location.href = metamaskUrl;
           } catch (error) {
             console.log("🔍 [MOBILE DEBUG] Direct redirect failed:", error);
           }
           
-          // Method 2: Create a temporary link to trigger the app (immediate)
+          // Method 3: Create a temporary link to trigger the app
           const link = document.createElement('a');
           link.href = metamaskUrl;
           link.style.display = 'none';
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
-          
-          // Method 3: Try using window.open as fallback (immediate)
-          try {
-            window.open(metamaskUrl, '_blank');
-          } catch (error) {
-            console.log("🔍 [MOBILE DEBUG] Window.open fallback failed:", error);
-          }
           
           // Set a flag to indicate we're waiting for MetaMask
           localStorage.setItem('waiting_for_metamask', 'true');
@@ -603,7 +615,9 @@ export const useWeb3 = () => {
 
     console.log("🔍 [MOBILE DEBUG] Waiting for MetaMask, starting periodic checks");
     
+    let checkCount = 0;
     const checkInterval = setInterval(async () => {
+      checkCount++;
       const hasMetaMask = checkMetaMaskAvailability();
       setIsMetaMaskMobile(hasMetaMask);
       
@@ -612,10 +626,21 @@ export const useWeb3 = () => {
         try {
           await connect();
           localStorage.removeItem('waiting_for_metamask');
+          localStorage.removeItem('metamask_redirect_time');
           clearInterval(checkInterval);
         } catch (error) {
           console.log("🔍 [MOBILE DEBUG] Auto-connection failed during periodic check:", error);
         }
+      }
+      
+      // After 10 seconds, show a helpful message if still waiting
+      if (checkCount === 10 && !hasMetaMask) {
+        console.log("🔍 [MOBILE DEBUG] Still waiting for MetaMask after 10 seconds");
+        toast({
+          title: 'Still connecting...',
+          description: 'If you\'re in MetaMask app, please return to this website to complete the connection',
+          variant: 'default',
+        });
       }
     }, 1000); // Check every 1 second for faster detection
 
@@ -623,6 +648,16 @@ export const useWeb3 = () => {
     const timeout = setTimeout(() => {
       clearInterval(checkInterval);
       localStorage.removeItem('waiting_for_metamask');
+      localStorage.removeItem('metamask_redirect_time');
+      
+      // Show final instructions if still not connected
+      if (!state.isConnected) {
+        toast({
+          title: 'Connection Timeout',
+          description: 'Please return to this website and try connecting again, or use the MetaMask browser to visit this site',
+          variant: 'destructive',
+        });
+      }
     }, 30000);
 
     return () => {
