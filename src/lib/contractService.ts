@@ -1,6 +1,13 @@
 import { ethers } from 'ethers';
 import EVANA_ABI from '../abi/EVANA.json';
 
+// Extend Window interface to include ethereum
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 export interface ContractConfig {
   address: string;
   rpcUrl: string;
@@ -8,7 +15,7 @@ export interface ContractConfig {
 }
 
 export class ContractService {
-  private provider: ethers.JsonRpcProvider | null = null;
+  private provider: ethers.JsonRpcProvider | ethers.BrowserProvider | null = null;
   private contract: ethers.Contract | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
 

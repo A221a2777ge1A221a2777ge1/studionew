@@ -1,5 +1,12 @@
 import { ethers } from 'ethers';
 
+// Extend Window interface to include ethereum
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
 export interface SwapParams {
   tokenIn: string;
   tokenOut: string;
@@ -7,6 +14,7 @@ export interface SwapParams {
   slippageTolerance: number; // Percentage (e.g., 0.5 for 0.5%)
   deadline: number; // Unix timestamp
   recipient: string;
+  minimumAmountOut?: string; // Optional minimum amount out
 }
 
 export interface SwapQuote {
@@ -17,7 +25,7 @@ export interface SwapQuote {
 }
 
 export class SwapService {
-  private provider: ethers.JsonRpcProvider | null = null;
+  private provider: ethers.JsonRpcProvider | ethers.BrowserProvider | null = null;
   private routerContract: ethers.Contract | null = null;
   private signer: ethers.JsonRpcSigner | null = null;
 
