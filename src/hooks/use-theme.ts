@@ -8,6 +8,7 @@ export function useTheme() {
   const { theme, setTheme: setNextTheme, resolvedTheme } = useNextTheme();
   const { user, userProfile, updateUserPreferences } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
+  const [isChanging, setIsChanging] = useState(false);
 
   // Debug: Log theme state changes (reduced frequency)
   useEffect(() => {
@@ -49,7 +50,10 @@ export function useTheme() {
 
   // Custom setTheme function that persists to user preferences
   const setTheme = async (newTheme: string) => {
+    if (newTheme === theme) return; // Don't change if already the same theme
+    
     console.log("🔍 [THEME DEBUG] Setting theme:", { from: theme, to: newTheme });
+    setIsChanging(true);
     
     setNextTheme(newTheme);
     
@@ -67,6 +71,11 @@ export function useTheme() {
         console.error("🔍 [THEME DEBUG] Failed to update theme preference:", error);
       }
     }
+    
+    // Reset changing state after a short delay to allow for visual feedback
+    setTimeout(() => {
+      setIsChanging(false);
+    }, 300);
   };
 
   return {
@@ -74,5 +83,6 @@ export function useTheme() {
     setTheme,
     resolvedTheme,
     isLoading,
+    isChanging,
   };
 }

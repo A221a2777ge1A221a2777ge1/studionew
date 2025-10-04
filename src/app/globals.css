@@ -6,25 +6,26 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* Light Theme Colors */
+    --background: 0 0% 100%; /* White */
+    --foreground: 222.2 84% 4.9%; /* Dark text */
+    --card: 0 0% 100%; /* White cards */
+    --card-foreground: 222.2 84% 4.9%; /* Dark text on cards */
+    --popover: 0 0% 100%; /* White popover */
+    --popover-foreground: 222.2 84% 4.9%; /* Dark text on popover */
+    --primary: 222.2 47.4% 11.2%; /* Dark primary */
+    --primary-foreground: 210 40% 98%; /* Light text on primary */
+    --secondary: 210 40% 96%; /* Light gray secondary */
+    --secondary-foreground: 222.2 47.4% 11.2%; /* Dark text on secondary */
+    --muted: 210 40% 96%; /* Light muted */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Gray muted text */
+    --accent: 210 40% 96%; /* Light accent */
+    --accent-foreground: 222.2 47.4% 11.2%; /* Dark text on accent */
+    --destructive: 0 84.2% 60.2%; /* Red destructive */
+    --destructive-foreground: 210 40% 98%; /* Light text on destructive */
+    --border: 214.3 31.8% 91.4%; /* Light border */
+    --input: 214.3 31.8% 91.4%; /* Light input */
+    --ring: 222.2 84% 4.9%; /* Dark ring */
 
     --radius: 0.75rem;
 
@@ -36,25 +37,26 @@
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* Dark Theme Colors */
+    --background: 222.2 84% 4.9%; /* Dark background */
+    --foreground: 210 40% 98%; /* Light text */
+    --card: 222.2 84% 4.9%; /* Dark cards */
+    --card-foreground: 210 40% 98%; /* Light text on cards */
+    --popover: 222.2 84% 4.9%; /* Dark popover */
+    --popover-foreground: 210 40% 98%; /* Light text on popover */
+    --primary: 210 40% 98%; /* Light primary */
+    --primary-foreground: 222.2 47.4% 11.2%; /* Dark text on primary */
+    --secondary: 217.2 32.6% 17.5%; /* Dark secondary */
+    --secondary-foreground: 210 40% 98%; /* Light text on secondary */
+    --muted: 217.2 32.6% 17.5%; /* Dark muted */
+    --muted-foreground: 215 20.2% 65.1%; /* Light muted text */
+    --accent: 217.2 32.6% 17.5%; /* Dark accent */
+    --accent-foreground: 210 40% 98%; /* Light text on accent */
+    --destructive: 0 62.8% 30.6%; /* Dark red destructive */
+    --destructive-foreground: 210 40% 98%; /* Light text on destructive */
+    --border: 217.2 32.6% 17.5%; /* Dark border */
+    --input: 217.2 32.6% 17.5%; /* Dark input */
+    --ring: 224.3 76.3% 48%; /* Light ring */
     
     --chart-1: 120 100% 50%; /* Green */
     --chart-2: 51 100% 50%; /* Gold */
@@ -69,21 +71,68 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body transition-colors duration-300;
+  }
+  
+  /* Ensure smooth theme transitions */
+  html {
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  
+  /* Theme-specific body styling */
+  .light body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+  
+  .dark body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 }
 
 @layer components {
-  /* African Tribal Pattern Backgrounds */
+  /* African Tribal Pattern Backgrounds - Theme Aware */
   .tribal-pattern {
     background-image: 
       radial-gradient(circle at 25% 25%, rgba(50, 205, 50, 0.1) 0%, transparent 50%),
       radial-gradient(circle at 75% 75%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
       linear-gradient(45deg, transparent 30%, rgba(50, 205, 50, 0.05) 50%, transparent 70%);
   }
+  
+  /* Light theme tribal pattern */
+  .light .tribal-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(50, 205, 50, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(255, 215, 0, 0.05) 0%, transparent 50%),
+      linear-gradient(45deg, transparent 30%, rgba(50, 205, 50, 0.02) 50%, transparent 70%);
+  }
+  
+  /* Dark theme tribal pattern */
+  .dark .tribal-pattern {
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(50, 205, 50, 0.15) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(255, 215, 0, 0.15) 0%, transparent 50%),
+      linear-gradient(45deg, transparent 30%, rgba(50, 205, 50, 0.08) 50%, transparent 70%);
+  }
 
   .tribal-border {
     border-image: linear-gradient(45deg, #32CD32, #FFD700, #32CD32) 1;
+  }
+  
+  /* Theme transition utilities */
+  .theme-transition {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  /* Enhanced card styling with theme awareness */
+  .card {
+    @apply theme-transition;
+  }
+  
+  /* Enhanced button styling with theme awareness */
+  .btn {
+    @apply theme-transition;
   }
 
   /* Gamified Animations */
