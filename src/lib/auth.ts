@@ -182,18 +182,18 @@ export class AuthService {
     try {
       console.log("🔍 [FIREBASE DEBUG] Updating user preferences:", { uid, preferences });
       
-      // Store preferences in localStorage for immediate access
-      const currentProfile = await this.getUserProfile(uid);
-      if (currentProfile) {
-        const updatedPreferences = { ...currentProfile.preferences, ...preferences };
-        localStorage.setItem(`user_preferences_${uid}`, JSON.stringify(updatedPreferences));
-        console.log("🔍 [FIREBASE DEBUG] Preferences stored in localStorage:", updatedPreferences);
-      }
+      // Get current preferences to merge with new ones
+      const currentPreferences = await this.getUserPreferences(uid);
+      const updatedPreferences = { ...currentPreferences, ...preferences };
       
-      // Also update Firebase user document with preferences
+      // Store preferences in localStorage for immediate access
+      localStorage.setItem(`user_preferences_${uid}`, JSON.stringify(updatedPreferences));
+      console.log("🔍 [FIREBASE DEBUG] Preferences stored in localStorage:", updatedPreferences);
+      
+      // Also update Firebase user document with complete preferences
       try {
         await FirebaseService.updateUserProfile(uid, {
-          preferences: preferences
+          preferences: updatedPreferences
         });
         console.log("🔍 [FIREBASE DEBUG] Preferences saved to Firebase successfully");
       } catch (firebaseError) {
