@@ -37,12 +37,38 @@ export function AuthForm() {
         title: "Welcome to DreamCoin!",
         description: "Successfully signed in with Google. Let's build your empire!",
       });
-    } catch (error) {
-      toast({
-        title: "Sign-in failed",
-        description: "Failed to sign in with Google. Please try again.",
-        variant: "destructive",
-      });
+    } catch (error: any) {
+      console.error('Google sign-in error:', error);
+      
+      // Handle specific Firebase auth errors
+      if (error.code === 'auth/popup-closed-by-user') {
+        // Don't show error for popup closed - this is normal user behavior
+        console.log('User closed the authentication popup');
+        return;
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        // Don't show error for cancelled popup
+        console.log('Authentication popup was cancelled');
+        return;
+      } else if (error.code === 'auth/popup-blocked') {
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups for this site and try again.",
+          variant: "destructive",
+        });
+      } else if (error.code === 'auth/network-request-failed') {
+        toast({
+          title: "Network Error",
+          description: "Please check your internet connection and try again.",
+          variant: "destructive",
+        });
+      } else {
+        // Generic error for other cases
+        toast({
+          title: "Sign-in failed",
+          description: "Failed to sign in with Google. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -62,6 +88,9 @@ export function AuthForm() {
         <CardDescription className="text-muted-foreground text-base">
           Sign in to start building your crypto empire with the wisdom of African heritage
         </CardDescription>
+        <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md">
+          💡 <strong>Tip:</strong> Complete the Google sign-in in the popup window to continue
+        </div>
       </CardHeader>
       
       <CardContent className="space-y-6 pb-8">

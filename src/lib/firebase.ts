@@ -17,12 +17,28 @@ const firebaseConfig = {
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   console.error('Firebase configuration is missing required fields');
   console.error('Please check your .env.local file and ensure all Firebase environment variables are set');
+  console.error('Current config:', {
+    apiKey: firebaseConfig.apiKey ? 'Set' : 'Missing',
+    projectId: firebaseConfig.projectId ? 'Set' : 'Missing',
+    authDomain: firebaseConfig.authDomain ? 'Set' : 'Missing'
+  });
 }
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase only in browser environment
+let app: any = null;
+let auth: any = null;
+let db: any = null;
+let storage: any = null;
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
+if (typeof window !== 'undefined') {
+  // Only initialize Firebase in browser environment
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+  storage = getStorage(app);
+} else {
+  // Provide mock objects for server-side rendering
+  console.log('Firebase initialization skipped during SSR');
+}
+
+export { auth, db, storage };
