@@ -1,21 +1,20 @@
-# BBFT Smart Contract
+# EVANA Smart Contract
 
 ## Overview
-The BBFT (Baby BFT) token is a BEP-20 token deployed on the BNB Smart Chain with automated market maker integration and fee mechanisms.
+The EVANA token is a BEP-20 token deployed on the BNB Smart Chain with automated market maker integration and fee mechanisms.
 
 ## Contract Details
-- **Name**: Baby BFT
-- **Symbol**: BBFT
+- **Name**: EVANA
+- **Symbol**: EVANA
 - **Decimals**: 18
-- **Total Supply**: 10,000,000,000 BBFT
+- **Total Supply**: 10,000,000,000 EVANA
 - **Network**: BNB Smart Chain (BSC)
 
 ## Constructor Parameters
 ```solidity
 constructor(
-    address _TreasuryAddress,    // Treasury wallet address
-    address _devWallet,          // Developer wallet address  
-    address _routerAddress       // DEX router address (PancakeSwap)
+    address _treasuryAddress,    // Treasury wallet address
+    address _devWallet           // Developer wallet address
 )
 ```
 

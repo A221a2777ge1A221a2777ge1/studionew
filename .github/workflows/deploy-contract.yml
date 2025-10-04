@@ -1,4 +1,4 @@
-name: Deploy BBFT Contract
+name: Deploy EVANA Contract
 
 on:
   workflow_dispatch:
@@ -67,7 +67,7 @@ jobs:
         echo "   - Compiler Type: Solidity (Single file)"
         echo "   - Compiler Version: 0.8.20"
         echo "   - License: MIT"
-        echo "5. Copy the contract source code from contracts/BBFT.sol"
+        echo "5. Copy the contract source code from contracts/EVANA.sol"
         echo "6. Add constructor parameters if needed"
         
     - name: Update Firebase config

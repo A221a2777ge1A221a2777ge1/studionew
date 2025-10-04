@@ -1,6 +1,6 @@
 # African Tycoon - Production Deployment Guide
 
-This guide provides step-by-step instructions for deploying the African Tycoon application to production, including the BBFT smart contract, Firebase backend, and frontend application.
+This guide provides step-by-step instructions for deploying the African Tycoon application to production, including the EVANA smart contract, Firebase backend, and frontend application.
 
 ## 📋 Prerequisites
 
@@ -64,7 +64,7 @@ This guide provides step-by-step instructions for deploying the African Tycoon a
      - Compiler Type: Solidity (Single file)
      - Compiler Version: 0.8.20
      - License: MIT
-     - Source Code: Copy from `contracts/BBFT.sol`
+     - Source Code: Copy from `contracts/EVANA.sol`
 
 3. **Initialize contract**
    ```bash
@@ -149,10 +149,10 @@ firebase deploy --only firestore:indexes
    PANCAKESWAP_TESTNET_ROUTER
    WBNB_ADDRESS
    
-   # BBFT Contract Configuration
-   BBFT_CONTRACT_ADDRESS
-   BBFT_TREASURY_ADDRESS
-   BBFT_DEV_WALLET
+   # EVANA Contract Configuration
+   EVANA_CONTRACT_ADDRESS
+   EVANA_TREASURY_ADDRESS
+   EVANA_DEV_WALLET
    
    # Deployment Keys
    PRIVATE_KEY_TESTNET
@@ -178,9 +178,9 @@ firebase deploy --only firestore:indexes
    NEXT_PUBLIC_PANCAKESWAP_TESTNET_ROUTER=0xD99D1c33F9fC3444f8101754aBC46c52416550D1
    NEXT_PUBLIC_WBNB_ADDRESS=0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
    
-   NEXT_PUBLIC_BBFT_CONTRACT_ADDRESS=your_deployed_contract_address
-   NEXT_PUBLIC_BBFT_TREASURY_ADDRESS=your_treasury_address
-   NEXT_PUBLIC_BBFT_DEV_WALLET=your_dev_wallet
+   NEXT_PUBLIC_EVANA_CONTRACT_ADDRESS=your_deployed_contract_address
+   NEXT_PUBLIC_EVANA_TREASURY_ADDRESS=your_treasury_address
+   NEXT_PUBLIC_EVANA_DEV_WALLET=your_dev_wallet
    
    NEXT_PUBLIC_APP_URL=https://tapearn-studionew.web.app
    NEXT_PUBLIC_APP_NAME=African Tycoon
@@ -217,7 +217,7 @@ firebase deploy --only firestore:indexes
 
 1. **Use GitHub Actions workflow**
    - Go to Actions tab in your repository
-   - Select "Deploy BBFT Contract"
+   - Select "Deploy EVANA Contract"
    - Click "Run workflow"
    - Fill in the required parameters
 
@@ -237,7 +237,7 @@ firebase deploy --only firestore:indexes
    - Check transaction history
 
 3. **Contract Integration Testing**
-   - Verify BBFT contract is accessible
+   - Verify EVANA contract is accessible
    - Test token balance queries
    - Verify trading functions work
 
@@ -331,7 +331,7 @@ firebase deploy --only firestore:indexes
 
 Your deployment is successful when:
 
-- ✅ BBFT contract is deployed and verified on BscScan
+- ✅ EVANA contract is deployed and verified on BscScan
 - ✅ Firebase backend is configured and secure
 - ✅ Frontend is deployed and accessible
 - ✅ MetaMask integration works on BSC

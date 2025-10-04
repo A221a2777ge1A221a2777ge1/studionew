@@ -1,5 +1,5 @@
 import { ethers } from 'ethers';
-import BBFT_ABI from '../abi/BBFT.json';
+import EVANA_ABI from '../abi/EVANA.json';
 
 export interface ContractConfig {
   address: string;
@@ -40,7 +40,7 @@ export class ContractService {
       // Initialize contract with signer
       this.contract = new ethers.Contract(
         this.config.address,
-        BBFT_ABI,
+        EVANA_ABI,
         this.signer
       );
 
@@ -310,7 +310,7 @@ export class ContractService {
 // Factory function to create contract service
 export function createContractService(): ContractService {
   const config: ContractConfig = {
-    address: process.env.NEXT_PUBLIC_BBFT_CONTRACT_ADDRESS || '',
+    address: process.env.NEXT_PUBLIC_EVANA_CONTRACT_ADDRESS || '',
     rpcUrl: process.env.NEXT_PUBLIC_BSC_RPC_URL || 'https://bsc-dataseed.binance.org/',
     chainId: 56 // BSC Mainnet
   };
@@ -321,7 +321,7 @@ export function createContractService(): ContractService {
 // Testnet factory function
 export function createTestnetContractService(): ContractService {
   const config: ContractConfig = {
-    address: process.env.NEXT_PUBLIC_BBFT_CONTRACT_ADDRESS || '',
+    address: process.env.NEXT_PUBLIC_EVANA_CONTRACT_ADDRESS || '',
     rpcUrl: process.env.NEXT_PUBLIC_BSC_TESTNET_RPC_URL || 'https://data-seed-prebsc-1-s1.binance.org:8545/',
     chainId: 97 // BSC Testnet
   };

@@ -17,8 +17,8 @@ African Tycoon is a comprehensive, gamified cryptocurrency trading platform that
 - **Slippage Control**: Customizable slippage tolerance settings
 - **Transaction History**: Complete trade history and analytics
 
-### 💎 BBFT Token Integration
-- **BBFT Smart Contract**: Deployable BEP-20 token on BSC
+### 💎 EVANA Token Integration
+- **EVANA Smart Contract**: Deployable BEP-20 token on BSC
 - **Trading Features**: Buy/sell fees, automated swapping, treasury management
 - **Owner Controls**: Configurable fees, limits, and trading controls
 - **Liquidity Management**: Automated liquidity provision and management
@@ -88,10 +88,10 @@ African Tycoon is a comprehensive, gamified cryptocurrency trading platform that
    NEXT_PUBLIC_PANCAKESWAP_TESTNET_ROUTER=0xD99D1c33F9fC3444f8101754aBC46c52416550D1
    NEXT_PUBLIC_WBNB_ADDRESS=0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c
 
-   # BBFT Contract Configuration
-   NEXT_PUBLIC_BBFT_CONTRACT_ADDRESS=
-   NEXT_PUBLIC_BBFT_TREASURY_ADDRESS=
-   NEXT_PUBLIC_BBFT_DEV_WALLET=
+   # EVANA Contract Configuration
+   NEXT_PUBLIC_EVANA_CONTRACT_ADDRESS=
+   NEXT_PUBLIC_EVANA_TREASURY_ADDRESS=
+   NEXT_PUBLIC_EVANA_DEV_WALLET=
 
    # App Configuration
    NEXT_PUBLIC_APP_URL=http://localhost:9002
@@ -131,7 +131,7 @@ african-tycoon/
 │   │   ├── firebase.ts       # Firebase configuration
 │   │   ├── web3.ts          # Web3 and BSC integration
 │   │   ├── auth.ts          # Authentication service
-│   │   ├── contractService.ts # BBFT contract integration
+│   │   ├── contractService.ts # EVANA contract integration
 │   │   ├── swapService.ts # Token swapping service
 │   │   ├── mcp-pattern.ts   # MCP pattern implementation
 │   │   └── utils.ts         # General utilities
@@ -184,7 +184,7 @@ african-tycoon/
 
 ### Smart Contract Deployment
 
-1. **Deploy BBFT Contract to BSC Testnet**
+1. **Deploy EVANA Contract to BSC Testnet**
    ```bash
    # Set environment variables
    export PRIVATE_KEY_TESTNET=your_testnet_private_key
@@ -195,7 +195,7 @@ african-tycoon/
    npm run deploy:testnet
    ```
 
-2. **Deploy BBFT Contract to BSC Mainnet**
+2. **Deploy EVANA Contract to BSC Mainnet**
    ```bash
    # Set environment variables
    export PRIVATE_KEY_MAINNET=your_mainnet_private_key
@@ -211,7 +211,7 @@ african-tycoon/
    - Navigate to your contract address
    - Click "Verify and Publish"
    - Use Solidity (Single file), version 0.8.20, MIT license
-   - Copy source code from `contracts/BBFT.sol`
+   - Copy source code from `contracts/EVANA.sol`
 
 ### Firebase Hosting (Recommended)
 
@@ -231,7 +231,7 @@ african-tycoon/
    ```bash
    # Set all required environment variables
    export NEXT_PUBLIC_FIREBASE_API_KEY=your_key
-   export NEXT_PUBLIC_BBFT_CONTRACT_ADDRESS=deployed_contract_address
+   export NEXT_PUBLIC_EVANA_CONTRACT_ADDRESS=deployed_contract_address
    # ... other variables
    ```
 
@@ -260,9 +260,9 @@ african-tycoon/
      PANCAKESWAP_ROUTER
      PANCAKESWAP_TESTNET_ROUTER
      WBNB_ADDRESS
-     BBFT_CONTRACT_ADDRESS
-     BBFT_TREASURY_ADDRESS
-     BBFT_DEV_WALLET
+     EVANA_CONTRACT_ADDRESS
+     EVANA_TREASURY_ADDRESS
+     EVANA_DEV_WALLET
      PRIVATE_KEY_TESTNET
      PRIVATE_KEY_MAINNET
      ```
