@@ -49,17 +49,17 @@ export function AuthForm() {
   };
 
   return (
-    <Card className="w-full max-w-md bg-white/90 backdrop-blur-sm border-2 border-amber-200 shadow-2xl">
+    <Card className="w-full max-w-md bg-card/90 backdrop-blur-sm border-2 border-border shadow-2xl">
       <CardHeader className="space-y-4 text-center pb-6">
         <div className="flex justify-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center shadow-lg">
+          <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-yellow-500 rounded-full flex items-center justify-center shadow-lg">
             <Sparkles className="h-8 w-8 text-white" />
           </div>
         </div>
-        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent">
+        <CardTitle className="text-2xl font-bold bg-gradient-to-r from-green-400 to-yellow-500 bg-clip-text text-transparent">
           Begin Your Journey
         </CardTitle>
-        <CardDescription className="text-gray-600 text-base">
+        <CardDescription className="text-muted-foreground text-base">
           Sign in to start building your crypto empire with the wisdom of African heritage
         </CardDescription>
       </CardHeader>
@@ -69,7 +69,7 @@ export function AuthForm() {
         <Button
           onClick={handleGoogleSignIn}
           disabled={loading}
-          className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+          className="w-full h-14 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
         >
           {loading ? (
             <Loader2 className="mr-3 h-6 w-6 animate-spin" />
@@ -79,21 +79,21 @@ export function AuthForm() {
           Continue with Google
         </Button>
 
-        {/* African-inspired decorative line */}
+        {/* Decorative line with original colors */}
         <div className="flex items-center justify-center space-x-4">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent"></div>
-          <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-amber-300 to-transparent"></div>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-green-400 to-transparent"></div>
+          <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-green-400 to-transparent"></div>
         </div>
 
         {/* Terms and Privacy */}
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-muted-foreground">
           By continuing, you agree to our{" "}
-          <a href="#" className="text-amber-600 hover:text-amber-700 underline font-medium">
+          <a href="#" className="text-green-400 hover:text-green-300 underline font-medium">
             Terms of Service
           </a>{" "}
           and{" "}
-          <a href="#" className="text-amber-600 hover:text-amber-700 underline font-medium">
+          <a href="#" className="text-green-400 hover:text-green-300 underline font-medium">
             Privacy Policy
           </a>
         </div>
