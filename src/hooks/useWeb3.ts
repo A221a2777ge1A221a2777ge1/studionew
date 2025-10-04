@@ -207,33 +207,53 @@ export const useWeb3 = () => {
       // Handle mobile-specific connection logic
       if (mobile) {
         if (!hasMetaMask) {
-          console.log("🔍 [MOBILE DEBUG] Mobile: MetaMask not detected, showing instructions");
+          console.log("🔍 [MOBILE DEBUG] Mobile: MetaMask not detected, attempting to open MetaMask app");
           
-          // Show instructions for mobile users
-          toast({
-            title: 'MetaMask Mobile Required',
-            description: 'Please install MetaMask mobile app and open this site in the MetaMask browser',
-            variant: 'destructive',
-          });
-          
-          // Try to open MetaMask app using a more reliable method
+          // Try to open MetaMask app using multiple methods
           const currentUrl = encodeURIComponent(window.location.href);
           const metamaskUrl = `metamask://dapp/${currentUrl}`;
           
           console.log("🔍 [MOBILE DEBUG] Attempting to open MetaMask app:", metamaskUrl);
           
-          // Create a temporary link to trigger the app
-          const link = document.createElement('a');
-          link.href = metamaskUrl;
-          link.style.display = 'none';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          // Method 1: Direct window.location
+          try {
+            window.location.href = metamaskUrl;
+          } catch (error) {
+            console.log("🔍 [MOBILE DEBUG] Direct redirect failed:", error);
+          }
+          
+          // Method 2: Create a temporary link to trigger the app
+          setTimeout(() => {
+            const link = document.createElement('a');
+            link.href = metamaskUrl;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }, 100);
+          
+          // Method 3: Try using window.open as fallback
+          setTimeout(() => {
+            try {
+              window.open(metamaskUrl, '_blank');
+            } catch (error) {
+              console.log("🔍 [MOBILE DEBUG] Window.open fallback failed:", error);
+            }
+          }, 500);
           
           // Set a flag to indicate we're waiting for MetaMask
           localStorage.setItem('waiting_for_metamask', 'true');
           
-          throw new Error('MetaMask mobile app required. Please install MetaMask and open this site in the MetaMask browser.');
+          // Show a more helpful message instead of an error
+          toast({
+            title: 'Opening MetaMask...',
+            description: 'If MetaMask app doesn\'t open, please install it and try again',
+            variant: 'default',
+          });
+          
+          // Don't throw an error, just return early to allow the waiting mechanism to work
+          setState(prev => ({ ...prev, isConnecting: false }));
+          return;
         } else {
           // MetaMask is available on mobile, clear the waiting flag
           localStorage.removeItem('waiting_for_metamask');
