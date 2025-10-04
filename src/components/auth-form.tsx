@@ -38,24 +38,24 @@ export function AuthForm() {
         description: "Successfully signed in with Google. Let's build your empire!",
       });
     } catch (error: any) {
-      console.error('Google sign-in error:', error);
-      
       // Handle specific Firebase auth errors
       if (error.code === 'auth/popup-closed-by-user') {
         // Don't show error for popup closed - this is normal user behavior
-        console.log('User closed the authentication popup');
+        console.log('User closed the authentication popup - this is normal behavior');
         return;
       } else if (error.code === 'auth/cancelled-popup-request') {
         // Don't show error for cancelled popup
-        console.log('Authentication popup was cancelled');
+        console.log('Authentication popup was cancelled - this is normal behavior');
         return;
       } else if (error.code === 'auth/popup-blocked') {
+        console.error('Popup blocked error:', error);
         toast({
           title: "Popup Blocked",
           description: "Please allow popups for this site and try again.",
           variant: "destructive",
         });
       } else if (error.code === 'auth/network-request-failed') {
+        console.error('Network error:', error);
         toast({
           title: "Network Error",
           description: "Please check your internet connection and try again.",
@@ -63,6 +63,7 @@ export function AuthForm() {
         });
       } else {
         // Generic error for other cases
+        console.error('Unexpected Google sign-in error:', error);
         toast({
           title: "Sign-in failed",
           description: "Failed to sign in with Google. Please try again.",
