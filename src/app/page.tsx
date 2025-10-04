@@ -24,11 +24,6 @@ export default function Home() {
             <div className="w-32 h-1 bg-gradient-to-r from-green-500 to-yellow-500 mx-auto rounded-full"></div>
           </div>
           
-          {/* Subtitle with original theme */}
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-xl leading-relaxed">
-            Embark on your journey to build a crypto empire with the wisdom of African heritage. 
-            Experience the power of AI-driven investment strategies in a beautifully crafted platform.
-          </p>
         </div>
         
         <div className="mt-12 w-full max-w-md">
