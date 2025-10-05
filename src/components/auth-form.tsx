@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles } from "lucide-react";
+import { AuthGuide } from "@/components/auth-guide";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -31,10 +32,22 @@ export function AuthForm() {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
+      
+      // Store the current URL for redirect handling
+      localStorage.setItem('google_auth_redirect_url', window.location.href);
+      
       await signInWithGoogle();
       
-      // Redirect to dashboard after successful authentication
-      router.push("/dashboard");
+      // Check if we're returning from a redirect
+      const redirectUrl = localStorage.getItem('google_auth_redirect_url');
+      if (redirectUrl) {
+        // Clear the redirect URL and redirect to dashboard
+        localStorage.removeItem('google_auth_redirect_url');
+        router.push("/dashboard");
+      } else {
+        // Normal flow - redirect to dashboard
+        router.push("/dashboard");
+      }
       
       toast({
         title: "Welcome to DreamCoin!",
@@ -146,6 +159,8 @@ export function AuthForm() {
             Privacy Policy
           </a>
         </div>
+        
+        <AuthGuide />
       </CardContent>
     </Card>
   );

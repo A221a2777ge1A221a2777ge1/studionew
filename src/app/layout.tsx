@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { DebugDashboard } from "@/components/debug-dashboard";
+import { AuthRedirectHandler } from "@/components/auth-redirect-handler";
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 
@@ -41,6 +42,7 @@ export default function RootLayout({
             {children}
             <Toaster />
             <DebugDashboard />
+            <AuthRedirectHandler />
           </ThemeProvider>
         </ErrorBoundary>
       </body>

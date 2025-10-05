@@ -154,11 +154,39 @@ export class AuthService {
         // User just returned from redirect
         const user = result.user;
         
+        console.log('🔍 [AUTH DEBUG] User returned from redirect:', {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName
+        });
+        
         // Set MCP context first
         const context = createMCPContext(user.uid, { method: 'google' });
         mcpManager.setContext(context);
         
-        const userProfile = await this.createOrUpdateUserProfile(user);
+        // Create or update user profile with proper error handling
+        let userProfile: UserProfile;
+        try {
+          userProfile = await this.createOrUpdateUserProfile(user);
+          console.log('🔍 [AUTH DEBUG] User profile created/updated successfully:', userProfile);
+        } catch (profileError) {
+          console.error('🔍 [AUTH DEBUG] Error creating user profile:', profileError);
+          // Create a basic profile if database creation fails
+          userProfile = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || 'Anonymous User',
+            walletAddress: undefined,
+            level: 1,
+            experience: 0,
+            totalTrades: 0,
+            totalVolume: 0,
+            achievements: [],
+            createdAt: Date.now(),
+            lastLogin: Date.now(),
+            preferences: { theme: 'dark', notifications: true, language: 'en' },
+          };
+        }
         
         // Emit MCP event (now context is set)
         try {
