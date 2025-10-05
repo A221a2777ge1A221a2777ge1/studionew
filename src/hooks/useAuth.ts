@@ -9,6 +9,19 @@ export const useAuth = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUserProfile = async () => {
+    if (user) {
+      console.log('🔍 [AUTH HOOK] Refreshing user profile for UID:', user.uid);
+      try {
+        const profile = await authService.getUserProfile(user.uid);
+        setUserProfile(profile);
+        console.log('🔍 [AUTH HOOK] User profile refreshed:', profile);
+      } catch (error) {
+        console.error('🔍 [AUTH HOOK] Error refreshing user profile:', error);
+      }
+    }
+  };
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
@@ -33,6 +46,7 @@ export const useAuth = () => {
     user,
     userProfile,
     loading,
+    refreshUserProfile,
     signInWithGoogle: authService.signInWithGoogle.bind(authService),
     signInWithMetaMask: authService.signInWithMetaMask.bind(authService),
     signOut: authService.signOut.bind(authService),

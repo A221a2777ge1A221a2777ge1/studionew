@@ -66,34 +66,34 @@ export function WalletConnector({ onWalletLinked, onClose }: WalletConnectorProp
 
   const getConnectionMethod = () => {
     const isMobile = walletService.isMobile();
-    const isMetaMaskBrowser = walletService.isMetaMaskBrowser();
-    const hasMetaMask = walletService.isMetaMaskAvailable();
+    const hasInjectedProvider = walletService.isAnyInjectedProvider();
+    const isInMetaMaskBrowser = walletService.isInMetaMaskBrowser();
 
-    if (isMetaMaskBrowser) {
+    if (isInMetaMaskBrowser) {
       return {
         method: 'MetaMask Browser',
         description: 'Direct connection via MetaMask browser',
         icon: <Wallet className="h-5 w-5" />,
         color: 'bg-orange-500'
       };
-    } else if (isMobile && hasMetaMask) {
+    } else if (hasInjectedProvider) {
       return {
-        method: 'MetaMask Mobile',
-        description: 'Connection via MetaMask mobile app',
-        icon: <Smartphone className="h-5 w-5" />,
+        method: 'Wallet Extension',
+        description: 'Connection via browser wallet extension',
+        icon: <Wallet className="h-5 w-5" />,
         color: 'bg-orange-500'
       };
-    } else if (isMobile && !hasMetaMask) {
+    } else if (isMobile) {
       return {
-        method: 'WalletConnect',
-        description: 'Connection via WalletConnect (supports multiple wallets)',
-        icon: <Shield className="h-5 w-5" />,
+        method: 'Mobile Wallet',
+        description: 'Connection via MetaMask app or WalletConnect',
+        icon: <Smartphone className="h-5 w-5" />,
         color: 'bg-blue-500'
       };
     } else {
       return {
-        method: 'MetaMask Extension',
-        description: 'Connection via MetaMask browser extension',
+        method: 'Wallet Extension',
+        description: 'Connection via browser wallet extension',
         icon: <Wallet className="h-5 w-5" />,
         color: 'bg-orange-500'
       };
@@ -154,6 +154,20 @@ export function WalletConnector({ onWalletLinked, onClose }: WalletConnectorProp
             </div>
           </div>
         </div>
+
+        {/* Mobile Instructions */}
+        {walletService.isMobile() && !walletService.isAnyInjectedProvider() && (
+          <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+            <div className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+              Mobile Wallet Options:
+            </div>
+            <div className="space-y-1 text-xs text-blue-700 dark:text-blue-300">
+              <div>• <strong>MetaMask:</strong> Install MetaMask app and use WalletConnect</div>
+              <div>• <strong>Other Wallets:</strong> Use WalletConnect to connect any compatible wallet</div>
+              <div>• <strong>Best Experience:</strong> Open this site in MetaMask browser</div>
+            </div>
+          </div>
+        )}
 
         {/* Connection Status */}
         {connectionStep && (

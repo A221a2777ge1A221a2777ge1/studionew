@@ -29,10 +29,25 @@ export class WalletService {
   }
 
   /**
-   * Check if MetaMask is available
+   * Check if MetaMask is injected (desktop or MetaMask mobile in-app browser)
    */
-  isMetaMaskAvailable(): boolean {
+  isMetaMaskInjected(): boolean {
     return typeof window !== 'undefined' && !!(window as any).ethereum?.isMetaMask;
+  }
+
+  /**
+   * Check if any wallet provider is injected
+   */
+  isAnyInjectedProvider(): boolean {
+    return typeof window !== 'undefined' && !!(window as any).ethereum;
+  }
+
+  /**
+   * Check if we're in MetaMask mobile browser
+   */
+  isInMetaMaskBrowser(): boolean {
+    if (typeof window === 'undefined') return false;
+    return navigator.userAgent.includes('MetaMask');
   }
 
   /**
@@ -53,21 +68,23 @@ export class WalletService {
   }
 
   /**
-   * Connect to MetaMask (desktop or mobile)
+   * Connect using injected provider (desktop or MetaMask mobile in-app browser)
    */
-  async connectMetaMask(): Promise<WalletConnectionResult> {
-    if (!this.isMetaMaskAvailable()) {
-      throw new Error('MetaMask not detected. Please install MetaMask browser extension or use MetaMask mobile app.');
+  async connectInjectedProvider(): Promise<WalletConnectionResult> {
+    if (!this.isAnyInjectedProvider()) {
+      throw new Error('No injected wallet provider found');
     }
 
     try {
+      console.log('🔍 [WALLET SERVICE] Connecting with injected provider');
+      
       // Request account access
       const accounts = await (window as any).ethereum.request({
         method: 'eth_requestAccounts',
       });
 
       if (accounts.length === 0) {
-        throw new Error('No accounts found. Please connect an account in MetaMask.');
+        throw new Error('No accounts found. Please connect an account in your wallet.');
       }
 
       const provider = new ethers.BrowserProvider((window as any).ethereum);
@@ -76,11 +93,11 @@ export class WalletService {
       const network = await provider.getNetwork();
       const chainId = network.chainId.toString();
 
-      console.log('🔍 [WALLET SERVICE] MetaMask connected:', {
+      console.log('🔍 [WALLET SERVICE] Injected provider connected:', {
         address,
         chainId,
-        isMobile: this.isMobile(),
-        isMetaMaskBrowser: this.isMetaMaskBrowser()
+        isMetaMask: this.isMetaMaskInjected(),
+        isInMetaMaskBrowser: this.isInMetaMaskBrowser()
       });
 
       return {
@@ -91,8 +108,66 @@ export class WalletService {
       };
 
     } catch (error: any) {
-      console.error('🔍 [WALLET SERVICE] MetaMask connection error:', error);
-      throw new Error(`MetaMask connection failed: ${error.message}`);
+      console.error('🔍 [WALLET SERVICE] Injected provider connection error:', error);
+      throw new Error(`Wallet connection failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Connect using MetaMask SDK (mobile deep-link)
+   */
+  async connectMetaMaskSDK(): Promise<WalletConnectionResult> {
+    try {
+      console.log('🔍 [WALLET SERVICE] Connecting with MetaMask SDK');
+      
+      // Dynamic import to avoid SSR issues
+      const MetaMaskSDK = (await import('@metamask/sdk')).default;
+      
+      const MMSDK = new MetaMaskSDK({
+        dappMetadata: {
+          name: 'DreamCoin',
+          url: window.location.origin
+        },
+        injectProvider: false, // Don't inject into window.ethereum
+        communicationServerUrl: 'https://metamask-sdk-socket.metamask.io/',
+      });
+
+      const ethereum = MMSDK.getProvider();
+      
+      if (!ethereum) {
+        throw new Error('MetaMask SDK provider not available');
+      }
+
+      // Request account access (this will deep-link to MetaMask app)
+      const accounts = await ethereum.request({
+        method: 'eth_requestAccounts',
+      }) as string[];
+
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No accounts found. Please connect an account in MetaMask.');
+      }
+
+      const provider = new ethers.BrowserProvider(ethereum);
+      const signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      const network = await provider.getNetwork();
+      const chainId = network.chainId.toString();
+
+      console.log('🔍 [WALLET SERVICE] MetaMask SDK connected:', {
+        address,
+        chainId
+      });
+
+      return {
+        address,
+        provider,
+        signer,
+        chainId
+      };
+
+    } catch (error: any) {
+      console.error('🔍 [WALLET SERVICE] MetaMask SDK connection error:', error);
+      throw new Error(`MetaMask SDK connection failed: ${error.message}`);
     }
   }
 
@@ -143,45 +218,55 @@ export class WalletService {
   }
 
   /**
-   * Smart wallet connection - chooses best method for the device
+   * Robust wallet connection flow - tries injected → MetaMask SDK → WalletConnect
    */
   async connectWallet(): Promise<WalletConnectionResult> {
     const isMobile = this.isMobile();
-    const isMetaMaskBrowser = this.isMetaMaskBrowser();
-    const hasMetaMask = this.isMetaMaskAvailable();
+    const hasInjectedProvider = this.isAnyInjectedProvider();
+    const isMetaMaskInjected = this.isMetaMaskInjected();
+    const isInMetaMaskBrowser = this.isInMetaMaskBrowser();
 
     console.log('🔍 [WALLET SERVICE] Connection strategy:', {
       isMobile,
-      isMetaMaskBrowser,
-      hasMetaMask
+      hasInjectedProvider,
+      isMetaMaskInjected,
+      isInMetaMaskBrowser,
+      userAgent: navigator.userAgent,
+      ethereum: !!(window as any).ethereum
     });
 
-    // Strategy 1: MetaMask browser - use direct connection
-    if (isMetaMaskBrowser) {
-      return await this.connectMetaMask();
+    // Strategy 1: Try injected provider first (desktop or MetaMask mobile in-app browser)
+    if (hasInjectedProvider) {
+      console.log('🔍 [WALLET SERVICE] Trying injected provider connection');
+      try {
+        return await this.connectInjectedProvider();
+      } catch (error) {
+        console.warn('🔍 [WALLET SERVICE] Injected provider failed:', error);
+        // Continue to next strategy
+      }
     }
 
-    // Strategy 2: Desktop with MetaMask extension
-    if (!isMobile && hasMetaMask) {
-      return await this.connectMetaMask();
+    // Strategy 2: Try MetaMask SDK deep-link (best for MetaMask mobile app)
+    if (isMobile && !isInMetaMaskBrowser) {
+      console.log('🔍 [WALLET SERVICE] Trying MetaMask SDK deep-link');
+      try {
+        return await this.connectMetaMaskSDK();
+      } catch (error) {
+        console.warn('🔍 [WALLET SERVICE] MetaMask SDK failed:', error);
+        // Continue to next strategy
+      }
     }
 
-    // Strategy 3: Mobile with MetaMask available
-    if (isMobile && hasMetaMask) {
-      return await this.connectMetaMask();
-    }
-
-    // Strategy 4: Mobile without MetaMask - use WalletConnect
-    if (isMobile && !hasMetaMask) {
+    // Strategy 3: Try WalletConnect fallback (universal wallet support)
+    console.log('🔍 [WALLET SERVICE] Trying WalletConnect fallback');
+    try {
       return await this.connectWalletConnect();
+    } catch (error) {
+      console.error('🔍 [WALLET SERVICE] WalletConnect failed:', error);
     }
 
-    // Fallback: Try MetaMask anyway
-    if (hasMetaMask) {
-      return await this.connectMetaMask();
-    }
-
-    throw new Error('No compatible wallet found. Please install MetaMask or use a WalletConnect-compatible wallet.');
+    // All strategies failed
+    throw new Error('No wallet available. Please install MetaMask or use a WalletConnect-compatible wallet.');
   }
 
   /**

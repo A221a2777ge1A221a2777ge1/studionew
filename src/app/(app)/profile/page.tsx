@@ -9,18 +9,21 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { User, Wallet, Bell, Shield, LogOut, Gift, Users, Trophy, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { FirebaseService } from "@/lib/firebaseService";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/logo";
 
 export default function ProfilePage() {
-  const { user, userProfile, loading } = useAuth();
+  const { user, userProfile, loading, refreshUserProfile } = useAuth();
   const { toast } = useToast();
   const [username, setUsername] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const totalRewards = 12500;
 
   // Debug: Log user profile data
@@ -37,12 +40,16 @@ export default function ProfilePage() {
     });
   }, [user, userProfile, loading]);
 
-  // Initialize username from user profile
+  // Initialize username and avatar from user profile
   useEffect(() => {
     if (userProfile) {
       const currentUsername = userProfile.username || userProfile.displayName || "You";
       setUsername(currentUsername);
-      console.log("🔍 [PROFILE DEBUG] Username initialized:", currentUsername);
+      setAvatarUrl(userProfile.photoURL || "");
+      console.log("🔍 [PROFILE DEBUG] Username and avatar initialized:", {
+        username: currentUsername,
+        avatarUrl: userProfile.photoURL
+      });
     }
   }, [userProfile]);
 
@@ -79,6 +86,9 @@ export default function ProfilePage() {
 
       console.log("🔍 [PROFILE DEBUG] Username saved successfully to Firebase");
       
+      // Refresh the user profile to get updated data
+      await refreshUserProfile();
+      
       toast({
         title: "Success",
         description: "Profile updated successfully!",
@@ -94,6 +104,72 @@ export default function ProfilePage() {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleAvatarChange = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Invalid File",
+        description: "Please select an image file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File Too Large",
+        description: "Please select an image smaller than 5MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+
+    try {
+      // Create a preview URL for immediate display
+      const previewUrl = URL.createObjectURL(file);
+      setAvatarUrl(previewUrl);
+
+      // For now, we'll use a placeholder service. In production, you'd upload to Firebase Storage
+      // and get the download URL
+      const placeholderUrl = `https://picsum.photos/seed/${user.uid}/200/200`;
+      
+      // Update the user profile with the new avatar URL
+      await FirebaseService.updateUserProfile(user.uid, {
+        photoURL: placeholderUrl
+      });
+
+      // Refresh the user profile
+      await refreshUserProfile();
+
+      toast({
+        title: "Success",
+        description: "Avatar updated successfully!",
+      });
+
+    } catch (error) {
+      console.error("🔍 [PROFILE DEBUG] Avatar upload failed:", error);
+      toast({
+        title: "Upload Failed",
+        description: "Failed to update avatar. Please try again.",
+        variant: "destructive",
+      });
+      // Reset to original avatar
+      setAvatarUrl(userProfile?.photoURL || "");
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -181,10 +257,25 @@ export default function ProfilePage() {
                 <CardContent className="space-y-6">
                     <div className="flex items-center flex-wrap gap-4">
                         <Avatar className="h-20 w-20 border-4 border-primary">
-                            <AvatarImage src="https://picsum.photos/seed/myavatar/200/200" />
-                            <AvatarFallback>DC</AvatarFallback>
+                            <AvatarImage src={avatarUrl || userProfile?.photoURL || `https://picsum.photos/seed/${user?.uid}/200/200`} />
+                            <AvatarFallback>
+                              {username ? username.charAt(0).toUpperCase() : 'DC'}
+                            </AvatarFallback>
                         </Avatar>
-                        <Button variant="outline">Change Avatar</Button>
+                        <Button 
+                          variant="outline" 
+                          onClick={handleAvatarChange}
+                          disabled={isUploadingAvatar}
+                        >
+                          {isUploadingAvatar ? "Uploading..." : "Change Avatar"}
+                        </Button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarUpload}
+                          className="hidden"
+                        />
                     </div>
 
                     <div className="space-y-2">
