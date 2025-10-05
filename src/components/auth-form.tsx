@@ -59,8 +59,8 @@ export function AuthForm() {
         console.log('Authentication popup was cancelled - this is normal behavior');
         return;
       } else if (error.message === 'Redirect initiated') {
-        // This is expected for MetaMask browser redirect flow
-        console.log('Google sign-in redirect initiated - this is normal for MetaMask browser');
+        // This is expected for MetaMask browser or mobile browser redirect flow
+        console.log('Google sign-in redirect initiated - this is normal for MetaMask browser or mobile browsers');
         return;
       } else if (error.code === 'auth/popup-blocked') {
         console.error('Popup blocked error:', error);
@@ -76,6 +76,18 @@ export function AuthForm() {
           description: "Please check your internet connection and try again.",
           variant: "destructive",
         });
+      } else if (error.code === 'auth/operation-not-allowed' || 
+                 error.message?.includes('Use secure browsers') ||
+                 error.message?.includes('does not comply with Google') ||
+                 error.message?.includes('Access blocked')) {
+        console.error('Google policy error:', error);
+        toast({
+          title: "Authentication Method Changed",
+          description: "Redirecting to Google sign-in for better compatibility...",
+          variant: "default",
+        });
+        // Don't show error, the redirect method will handle it
+        return;
       } else {
         // Generic error for other cases
         console.error('Unexpected Google sign-in error:', error);

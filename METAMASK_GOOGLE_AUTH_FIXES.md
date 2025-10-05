@@ -5,16 +5,21 @@
 ### Problem Summary
 1. **MetaMask Connection**: Failed in external browsers but worked inside MetaMask browser
 2. **Google Sign-In**: Worked outside MetaMask but failed inside MetaMask browser
+3. **Google Policy Error**: Google "Use secure browsers" policy blocking OAuth in mobile browsers
 
 ## 🛠️ Solutions Implemented
 
 ### 1. Google Authentication Fix
 
-**Root Cause**: MetaMask browser blocks or interferes with Firebase OAuth popups due to stricter security policies.
+**Root Cause**: 
+- MetaMask browser blocks or interferes with Firebase OAuth popups due to stricter security policies
+- Google "Use secure browsers" policy blocks OAuth popups in mobile browsers
 
-**Solution**: Implemented dual authentication methods:
-- **Standard Browsers**: Use popup-based authentication (`signInWithPopup`)
+**Solution**: Implemented smart authentication method selection:
+- **Desktop Browsers**: Use popup-based authentication (`signInWithPopup`)
+- **Mobile Browsers**: Use redirect-based authentication (`signInWithRedirect`) to avoid Google policy issues
 - **MetaMask Browser**: Use redirect-based authentication (`signInWithRedirect`)
+- **Fallback**: Automatic fallback from popup to redirect if Google policy blocks the request
 
 **Files Modified**:
 - `src/lib/auth.ts`: Added MetaMask browser detection and dual auth methods
@@ -22,7 +27,7 @@
 
 **Key Changes**:
 ```typescript
-// MetaMask browser detection
+// Smart browser detection
 private isMetaMaskBrowser(): boolean {
   const userAgent = navigator.userAgent;
   const ethereum = (window as any).ethereum;
@@ -35,14 +40,46 @@ private isMetaMaskBrowser(): boolean {
   );
 }
 
-// Dual authentication methods
+private isMobileBrowser(): boolean {
+  const userAgent = navigator.userAgent;
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) ||
+    userAgent.includes('Mobile') ||
+    userAgent.includes('mobile')
+  );
+}
+
+// Smart authentication method selection
 async signInWithGoogle(): Promise<UserProfile> {
   const isMetaMaskBrowser = this.isMetaMaskBrowser();
+  const isMobileBrowser = this.isMobileBrowser();
   
   if (isMetaMaskBrowser) {
     return await this.signInWithGoogleRedirect(); // For MetaMask browser
+  } else if (isMobileBrowser) {
+    return await this.signInWithGoogleRedirect(); // For mobile browsers (avoid Google policy issues)
   } else {
-    return await this.signInWithGooglePopup();    // For standard browsers
+    return await this.signInWithGooglePopup();    // For desktop browsers
+  }
+}
+
+// Fallback handling in popup method
+private async signInWithGooglePopup(): Promise<UserProfile> {
+  try {
+    // Try popup method first
+    const result = await signInWithPopup(auth, this.googleProvider);
+    // ... handle success
+  } catch (error: any) {
+    // Check for Google policy errors and fallback to redirect
+    if (error.code === 'auth/operation-not-allowed' || 
+        error.message?.includes('Use secure browsers') ||
+        error.message?.includes('does not comply with Google') ||
+        error.message?.includes('Access blocked')) {
+      
+      console.log('🔍 [AUTH DEBUG] Google popup blocked by policy, falling back to redirect method');
+      return await this.signInWithGoogleRedirect();
+    }
+    throw error;
   }
 }
 ```

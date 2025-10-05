@@ -45,14 +45,19 @@ export class AuthService {
     try {
       // Check if we're in MetaMask browser and handle accordingly
       const isMetaMaskBrowser = this.isMetaMaskBrowser();
+      const isMobileBrowser = this.isMobileBrowser();
       
       if (isMetaMaskBrowser) {
         console.log('🔍 [AUTH DEBUG] Detected MetaMask browser, using redirect method');
         // Use redirect method for MetaMask browser
         return await this.signInWithGoogleRedirect();
+      } else if (isMobileBrowser) {
+        console.log('🔍 [AUTH DEBUG] Detected mobile browser, using redirect method to avoid policy issues');
+        // Use redirect method for mobile browsers to avoid Google policy issues
+        return await this.signInWithGoogleRedirect();
       } else {
-        console.log('🔍 [AUTH DEBUG] Using popup method for standard browser');
-        // Use popup method for standard browsers
+        console.log('🔍 [AUTH DEBUG] Using popup method for desktop browser');
+        // Use popup method for desktop browsers
         return await this.signInWithGooglePopup();
       }
     } catch (error: any) {
@@ -84,28 +89,58 @@ export class AuthService {
     );
   }
 
-  private async signInWithGooglePopup(): Promise<UserProfile> {
-    const result = await signInWithPopup(auth, this.googleProvider);
-    const user = result.user;
+  private isMobileBrowser(): boolean {
+    if (typeof window === 'undefined') return false;
     
-    // Set MCP context first
-    const context = createMCPContext(user.uid, { method: 'google' });
-    mcpManager.setContext(context);
+    const userAgent = navigator.userAgent;
     
-    const userProfile = await this.createOrUpdateUserProfile(user);
-    
-    // Emit MCP event (now context is set)
-    try {
-      await emitMCPEvent('user_authenticated', {
-        method: 'google',
-        userId: user.uid,
-        userProfile,
-      });
-    } catch (mcpError) {
-      console.warn('MCP event failed, continuing with auth:', mcpError);
-    }
+    // Check for mobile browser indicators
+    return (
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent) ||
+      userAgent.includes('Mobile') ||
+      userAgent.includes('mobile')
+    );
+  }
 
-    return userProfile;
+  private async signInWithGooglePopup(): Promise<UserProfile> {
+    try {
+      const result = await signInWithPopup(auth, this.googleProvider);
+      const user = result.user;
+      
+      // Set MCP context first
+      const context = createMCPContext(user.uid, { method: 'google' });
+      mcpManager.setContext(context);
+      
+      const userProfile = await this.createOrUpdateUserProfile(user);
+      
+      // Emit MCP event (now context is set)
+      try {
+        await emitMCPEvent('user_authenticated', {
+          method: 'google',
+          userId: user.uid,
+          userProfile,
+        });
+      } catch (mcpError) {
+        console.warn('MCP event failed, continuing with auth:', mcpError);
+      }
+
+      return userProfile;
+    } catch (error: any) {
+      // Check if it's a Google policy error (Use secure browsers)
+      if (error.code === 'auth/operation-not-allowed' || 
+          error.message?.includes('Use secure browsers') ||
+          error.message?.includes('does not comply with Google') ||
+          error.message?.includes('Access blocked')) {
+        
+        console.log('🔍 [AUTH DEBUG] Google popup blocked by policy, falling back to redirect method');
+        
+        // Fall back to redirect method for mobile browsers
+        return await this.signInWithGoogleRedirect();
+      }
+      
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   private async signInWithGoogleRedirect(): Promise<UserProfile> {
