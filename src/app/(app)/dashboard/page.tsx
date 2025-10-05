@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useWeb3, formatBalance, formatAddress } from "@/hooks/useWeb3";
+import { DashboardWalletConnector } from "@/components/dashboard-wallet-connector";
 import { emitMCPEvent } from "@/lib/mcp-pattern";
 import { 
   Wallet, 
@@ -41,7 +42,7 @@ interface LeaderboardEntry {
 }
 
 export default function Dashboard() {
-  const { userProfile } = useAuth();
+  const { user, userProfile, refreshUserProfile } = useAuth();
   const { 
     isConnected, 
     account, 
@@ -55,6 +56,20 @@ export default function Dashboard() {
   const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleWalletLinked = async (address: string) => {
+    console.log('🔍 [DASHBOARD] Wallet linked:', address);
+    // Refresh user profile to get updated wallet address
+    await refreshUserProfile();
+    // Optionally connect the wallet in the Web3 hook
+    if (!isConnected) {
+      try {
+        await connect();
+      } catch (error) {
+        console.warn('Failed to connect wallet after linking:', error);
+      }
+    }
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -245,7 +260,13 @@ export default function Dashboard() {
                     View Achievements
                   </a>
                 </Button>
-                {!isConnected && (
+                {!userProfile?.walletAddress && user && (
+                  <DashboardWalletConnector 
+                    uid={user.uid}
+                    onWalletLinked={handleWalletLinked}
+                  />
+                )}
+                {userProfile?.walletAddress && !isConnected && (
                   <Button 
                     variant="outline" 
                     className="w-full" 
