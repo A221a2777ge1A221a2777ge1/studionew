@@ -3,6 +3,9 @@ import { db } from '@/lib/firebase';
 import { doc, getDoc, setDoc, deleteDoc, arrayUnion, serverTimestamp } from 'firebase/firestore';
 import { ethers } from 'ethers';
 
+// Force dynamic rendering for API routes
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const { uid, address, signature } = await request.json();
