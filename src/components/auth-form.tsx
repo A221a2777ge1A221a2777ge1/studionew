@@ -12,9 +12,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles, Wallet } from "lucide-react";
-import { AuthGuide } from "@/components/auth-guide";
-import { WalletConnector } from "@/components/wallet-connector";
+import { Loader2, Sparkles } from "lucide-react";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -29,7 +27,6 @@ export function AuthForm() {
   const { signInWithGoogle, user, userProfile } = useAuth();
   
   const [loading, setLoading] = useState(false);
-  const [showWalletConnector, setShowWalletConnector] = useState(false);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -49,11 +46,11 @@ export function AuthForm() {
       
       toast({
         title: "Welcome to DreamCoin!",
-        description: "Successfully signed in with Google. Now connect your wallet to start trading!",
+        description: "Successfully signed in with Google. Redirecting to dashboard...",
       });
 
-      // Don't redirect to dashboard immediately - show wallet connector
-      setShowWalletConnector(true);
+      // Redirect to dashboard immediately after successful authentication
+      router.push("/dashboard");
     } catch (error: any) {
       // Handle specific Firebase auth errors
       if (error.code === 'auth/popup-closed-by-user') {
@@ -157,8 +154,6 @@ export function AuthForm() {
             Privacy Policy
           </a>
         </div>
-        
-        <AuthGuide />
       </CardContent>
     </Card>
   );
