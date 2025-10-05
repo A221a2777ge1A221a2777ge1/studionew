@@ -14,25 +14,22 @@ export function AuthRedirectHandler() {
 
   useEffect(() => {
     const handleRedirectResult = async () => {
-      // Only handle redirect if we're on the home page and not already authenticated
-      if (window.location.pathname === '/' && !user && !loading && !isHandlingRedirect) {
+      // Handle redirect when user becomes authenticated
+      if (user && userProfile && !loading && !isHandlingRedirect) {
         setIsHandlingRedirect(true);
         
         try {
-          console.log('🔍 [AUTH REDIRECT] Checking for redirect result...');
+          console.log('🔍 [AUTH REDIRECT] User authenticated, redirecting to dashboard:', {
+            uid: user.uid,
+            email: user.email,
+            displayName: userProfile.displayName
+          });
           
-          // Check if we have a redirect result in localStorage
-          const redirectUrl = localStorage.getItem('google_auth_redirect_url');
+          // Clear any redirect URL
+          localStorage.removeItem('google_auth_redirect_url');
           
-          if (redirectUrl) {
-            console.log('🔍 [AUTH REDIRECT] Found redirect URL, clearing and redirecting...');
-            localStorage.removeItem('google_auth_redirect_url');
-            
-            // Wait a bit for auth state to update
-            setTimeout(() => {
-              router.push('/dashboard');
-            }, 1000);
-          }
+          // Redirect to dashboard
+          router.push('/dashboard');
         } catch (error) {
           console.error('🔍 [AUTH REDIRECT] Error handling redirect:', error);
         } finally {
@@ -41,9 +38,9 @@ export function AuthRedirectHandler() {
       }
     };
 
-    // Handle redirect result when component mounts
+    // Handle redirect result when user becomes authenticated
     handleRedirectResult();
-  }, [user, loading, router, isHandlingRedirect]);
+  }, [user, userProfile, loading, router, isHandlingRedirect]);
 
   // Show loading state while handling redirect
   if (isHandlingRedirect) {

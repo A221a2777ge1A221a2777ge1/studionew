@@ -11,11 +11,18 @@ export default function Home() {
 
   // Redirect all authenticated users to dashboard
   useEffect(() => {
-    if (user && userProfile) {
-      // User is authenticated, redirect to dashboard immediately
+    if (user && userProfile && !loading) {
+      console.log('🔍 [HOME PAGE] User authenticated, redirecting to dashboard:', {
+        uid: user.uid,
+        email: user.email,
+        displayName: userProfile.displayName,
+        walletAddress: userProfile.walletAddress
+      });
+      
+      // User is authenticated with profile, redirect to dashboard immediately
       router.push("/dashboard");
     }
-  }, [user, userProfile, router]);
+  }, [user, userProfile, loading, router]);
 
 
   return (

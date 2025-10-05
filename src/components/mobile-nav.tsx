@@ -11,6 +11,7 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { Menu } from "lucide-react"
 import { navLinks } from "./main-nav"
 import { Logo } from "./logo"
+import { UserInfoDisplay } from "./user-info-display"
 
 export function MobileNav() {
   const [open, setOpen] = React.useState(false)
@@ -37,6 +38,12 @@ export function MobileNav() {
             <Logo className="h-8 w-8 mr-2" />
             <span className="font-bold text-lg text-primary">African Tycoon</span>
         </Link>
+        
+        {/* User Information */}
+        <div className="my-4 px-2">
+          <UserInfoDisplay compact={true} />
+        </div>
+        
         <ScrollArea className="my-4 h-[calc(100vh-8rem)] pb-10 pl-6">
           <div className="flex flex-col space-y-2">
             {navLinks.map(

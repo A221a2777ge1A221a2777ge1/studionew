@@ -49,8 +49,10 @@ export function AuthForm() {
         description: "Successfully signed in with Google. Redirecting to dashboard...",
       });
 
-      // Redirect to dashboard immediately after successful authentication
-      router.push("/dashboard");
+      // Small delay to ensure user profile is created/updated
+      setTimeout(() => {
+        router.push("/dashboard");
+      }, 500);
     } catch (error: any) {
       // Handle specific Firebase auth errors
       if (error.code === 'auth/popup-closed-by-user') {

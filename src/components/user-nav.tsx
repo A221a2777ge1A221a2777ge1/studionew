@@ -16,9 +16,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { ThemeToggle } from "./theme-toggle"
+import { useAuth } from "@/hooks/useAuth"
 
 export function UserNav() {
   const router = useRouter()
+  const { user, userProfile, signOut } = useAuth()
   return (
     <div className="flex items-center gap-2">
         <ThemeToggle />
@@ -26,17 +28,27 @@ export function UserNav() {
         <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
             <Avatar className="h-10 w-10 border-2 border-primary">
-                <AvatarImage src="https://picsum.photos/seed/myavatar/48/48" alt="@shadcn" />
-                <AvatarFallback>DC</AvatarFallback>
+                <AvatarImage 
+                  src={userProfile?.photoURL || user?.photoURL || `https://picsum.photos/seed/${user?.uid}/48/48`} 
+                  alt={userProfile?.displayName || user?.email || "User"} 
+                />
+                <AvatarFallback>
+                  {(userProfile?.displayName || user?.email || "DC").charAt(0).toUpperCase()}
+                </AvatarFallback>
             </Avatar>
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className="w-56 font-body" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">Player One</p>
+                <p className="text-sm font-medium leading-none">
+                  {userProfile?.displayName || user?.email?.split('@')[0] || 'User'}
+                </p>
                 <p className="text-xs leading-none text-muted-foreground">
-                player.one@dreamcoin.com
+                  {user?.email || 'No email'}
+                  {userProfile?.walletAddress && (
+                    <span className="block text-green-500">Wallet Connected</span>
+                  )}
                 </p>
             </div>
             </DropdownMenuLabel>
@@ -62,7 +74,10 @@ export function UserNav() {
                 </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => router.push('/')}>
+            <DropdownMenuItem onClick={async () => {
+              await signOut();
+              router.push('/');
+            }}>
             <LogOut className="mr-2 h-4 w-4" />
             <span>Log out</span>
             </DropdownMenuItem>
