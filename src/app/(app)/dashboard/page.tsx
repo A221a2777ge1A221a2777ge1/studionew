@@ -71,6 +71,21 @@ export default function Dashboard() {
     }
   };
 
+  // Debug: Log user information when dashboard loads
+  useEffect(() => {
+    if (user && userProfile) {
+      console.log('🔍 [DASHBOARD] User information loaded:', {
+        uid: user.uid,
+        email: user.email,
+        displayName: userProfile.displayName,
+        username: userProfile.username,
+        walletAddress: userProfile.walletAddress,
+        level: userProfile.level,
+        experience: userProfile.experience
+      });
+    }
+  }, [user, userProfile]);
+
   useEffect(() => {
     loadDashboardData();
   }, [userProfile, isConnected, account]);
@@ -148,21 +163,6 @@ export default function Dashboard() {
       </div>
     );
   }
-
-  // Debug: Log user information when dashboard loads
-  useEffect(() => {
-    if (user && userProfile) {
-      console.log('🔍 [DASHBOARD] User information loaded:', {
-        uid: user.uid,
-        email: user.email,
-        displayName: userProfile.displayName,
-        username: userProfile.username,
-        walletAddress: userProfile.walletAddress,
-        level: userProfile.level,
-        experience: userProfile.experience
-      });
-    }
-  }, [user, userProfile]);
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
