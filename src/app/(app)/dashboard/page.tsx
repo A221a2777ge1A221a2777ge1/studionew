@@ -43,6 +43,12 @@ interface LeaderboardEntry {
 
 export default function Dashboard() {
   const { user, userProfile, refreshUserProfile } = useAuth();
+  const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Initialize Web3 hook after state declarations
+  const web3Data = useWeb3();
   const { 
     isConnected, 
     account, 
@@ -52,10 +58,7 @@ export default function Dashboard() {
     isConnecting,
     getTokenBalance,
     isCorrectNetwork 
-  } = useWeb3();
-  const [walletBalance, setWalletBalance] = useState<WalletBalance | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(true);
+  } = web3Data;
 
   const handleWalletLinked = async (address: string) => {
     console.log('🔍 [DASHBOARD] Wallet linked:', address);
@@ -71,28 +74,28 @@ export default function Dashboard() {
     }
   };
 
-  // Debug: Log user information when dashboard loads
   useEffect(() => {
-    if (user && userProfile) {
-      console.log('🔍 [DASHBOARD] User information loaded:', {
-        uid: user.uid,
-        email: user.email,
-        displayName: userProfile.displayName,
-        username: userProfile.username,
-        walletAddress: userProfile.walletAddress,
-        level: userProfile.level,
-        experience: userProfile.experience
-      });
+    if (userProfile) {
+      loadDashboardData();
     }
-  }, [user, userProfile]);
-
-  useEffect(() => {
-    loadDashboardData();
   }, [userProfile, isConnected, account]);
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
+      
+      // Debug: Log user information when dashboard loads
+      if (user && userProfile) {
+        console.log('🔍 [DASHBOARD] User information loaded:', {
+          uid: user.uid,
+          email: user.email,
+          displayName: userProfile.displayName,
+          username: userProfile.username,
+          walletAddress: userProfile.walletAddress,
+          level: userProfile.level,
+          experience: userProfile.experience
+        });
+      }
       
       // Load wallet balance if wallet is connected
       if (isConnected && account) {
