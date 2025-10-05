@@ -122,9 +122,6 @@ export function AuthForm() {
         <CardDescription className="text-muted-foreground text-base">
           Sign in to start building your crypto empire with the wisdom of African heritage
         </CardDescription>
-        <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded-md">
-          💡 <strong>Tip:</strong> Complete the Google sign-in in the popup window to continue
-        </div>
       </CardHeader>
       
       <CardContent className="space-y-6 pb-8">
