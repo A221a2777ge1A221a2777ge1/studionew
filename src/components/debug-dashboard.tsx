@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Eye, EyeOff, Copy, Trash2 } from 'lucide-react';
 import { useWeb3 } from '@/hooks/useWeb3';
-import { testMobileDetection, testAuthenticationFlow } from '@/lib/mobile-test';
 
 interface DebugInfo {
   timestamp: string;
@@ -80,11 +79,6 @@ export function DebugDashboard() {
     captureDebugInfo();
   };
 
-  const runMobileTest = () => {
-    console.log('🔍 [DEBUG] Running mobile detection test...');
-    const testResults = testAuthenticationFlow();
-    setLogs(prev => [...prev, `Mobile test completed: ${JSON.stringify(testResults)}`]);
-  };
 
   useEffect(() => {
     if (isVisible) {
@@ -236,9 +230,6 @@ export function DebugDashboard() {
             </Button>
             <Button onClick={clearWaitingState} variant="outline">
               Clear Waiting State
-            </Button>
-            <Button onClick={runMobileTest} variant="outline">
-              Test Mobile Detection
             </Button>
           </div>
         </CardContent>
