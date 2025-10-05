@@ -10,7 +10,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { User, Wallet, Bell, Shield, LogOut, Gift, Users, Trophy, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { FirebaseService } from "@/lib/firebaseService";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/logo";

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTheme as useNextTheme } from 'next-themes';
-import { useAuth } from '@/lib/auth';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useTheme() {
   const { theme, setTheme: setNextTheme, resolvedTheme } = useNextTheme();

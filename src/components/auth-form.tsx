@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Sparkles } from "lucide-react";
 
@@ -33,16 +33,8 @@ export function AuthForm() {
       setLoading(true);
       await signInWithGoogle();
       
-      // Check if we're returning from a redirect
-      const redirectUrl = localStorage.getItem('google_auth_redirect_url');
-      if (redirectUrl) {
-        // Clear the redirect URL and redirect to dashboard
-        localStorage.removeItem('google_auth_redirect_url');
-        router.push("/dashboard");
-      } else {
-        // Normal flow - redirect to dashboard
-        router.push("/dashboard");
-      }
+      // Redirect to dashboard after successful authentication
+      router.push("/dashboard");
       
       toast({
         title: "Welcome to DreamCoin!",

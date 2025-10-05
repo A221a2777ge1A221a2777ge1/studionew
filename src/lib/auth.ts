@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { 
   signInWithPopup, 
   signOut,
@@ -144,11 +143,6 @@ export class AuthService {
   }
 
   private async signInWithGoogleRedirect(): Promise<UserProfile> {
-    // For MetaMask browser, we'll use a different approach
-    // Store the current URL to redirect back after auth
-    const currentUrl = window.location.href;
-    localStorage.setItem('google_auth_redirect_url', currentUrl);
-    
     // Use redirect method instead of popup
     const { signInWithRedirect, getRedirectResult } = await import('firebase/auth');
     
@@ -177,12 +171,10 @@ export class AuthService {
           console.warn('MCP event failed, continuing with auth:', mcpError);
         }
 
-        // Clear redirect URL
-        localStorage.removeItem('google_auth_redirect_url');
-        
         return userProfile;
       } else {
         // No redirect result, initiate redirect
+        console.log('🔍 [AUTH DEBUG] Initiating Google redirect authentication');
         await signInWithRedirect(auth, this.googleProvider);
         // This will redirect the page, so we won't reach here
         throw new Error('Redirect initiated');
@@ -516,40 +508,3 @@ export class AuthService {
 }
 
 export const authService = new AuthService();
-
-export const useAuth = () => {
-  const [user, setUser] = useState<User | null>(null);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      if (user) {
-        if (!mcpManager.getContext()) {
-          mcpManager.setContext(createMCPContext(user.uid));
-        }
-        const profile = await authService.getUserProfile(user.uid);
-        setUserProfile(profile);
-      } else {
-        if (mcpManager.getContext()) {
-          mcpManager.setContext(null);
-        }
-        setUserProfile(null);
-      }
-      setLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  return {
-    user,
-    userProfile,
-    loading,
-    signInWithGoogle: authService.signInWithGoogle.bind(authService),
-    signInWithMetaMask: authService.signInWithMetaMask.bind(authService),
-    signOut: authService.signOut.bind(authService),
-    updateUserPreferences: authService.updateUserPreferences.bind(authService),
-    getUserPreferences: authService.getUserPreferences.bind(authService),
-  };
-};

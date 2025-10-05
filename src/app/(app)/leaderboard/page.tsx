@@ -14,7 +14,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Crown, Trophy, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
 import { FirebaseService } from "@/lib/firebaseService";
 
 interface LeaderboardUser {
