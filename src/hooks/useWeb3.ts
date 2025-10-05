@@ -201,162 +201,60 @@ export const useWeb3 = () => {
 
   // Connect wallet
   const connect = useCallback(async () => {
-    console.log("🔍 [MOBILE DEBUG] Starting wallet connection process");
+    console.log("🔍 [WALLET DEBUG] Starting wallet connection process");
     setState(prev => ({ ...prev, isConnecting: true, error: null }));
 
     try {
-      const mobile = isMobile();
       const hasMetaMask = isMetaMaskInstalled();
       
-      // Comprehensive connection environment logging
-      console.log("🔍 [MOBILE DEBUG] Connection environment:", {
+      // Simple connection environment logging
+      console.log("🔍 [WALLET DEBUG] Connection environment:", {
         timestamp: new Date().toISOString(),
-        isMobile: mobile,
         hasMetaMask: hasMetaMask,
         userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        language: navigator.language,
-        cookieEnabled: navigator.cookieEnabled,
-        onLine: navigator.onLine,
-        currentUrl: window.location.href,
-        referrer: document.referrer,
         ethereum: {
           exists: !!(window as any).ethereum,
           isMetaMask: (window as any).ethereum?.isMetaMask,
           selectedAddress: (window as any).ethereum?.selectedAddress,
           chainId: (window as any).ethereum?.chainId,
-          networkVersion: (window as any).ethereum?.networkVersion,
-          isConnected: (window as any).ethereum?.isConnected?.(),
-          providers: (window as any).ethereum?.providers
-        },
-        localStorage: {
-          waiting_for_metamask: localStorage.getItem('waiting_for_metamask'),
-          metamask_redirect_time: localStorage.getItem('metamask_redirect_time'),
-          theme: localStorage.getItem('theme'),
-          allKeys: Object.keys(localStorage)
-        },
-        sessionStorage: {
-          allKeys: Object.keys(sessionStorage)
         }
       });
 
-      // Handle mobile-specific connection logic
-      if (mobile) {
-        if (!hasMetaMask) {
-          console.log("🔍 [MOBILE DEBUG] Mobile: MetaMask not detected, attempting to open MetaMask app");
-          
-          // Try to open MetaMask app using proper deep linking
-          const currentUrl = encodeURIComponent(window.location.href);
-          const metamaskUrl = `metamask://dapp/${currentUrl}`;
-          
-          console.log("🔍 [MOBILE DEBUG] Attempting to open MetaMask app:", {
-            timestamp: new Date().toISOString(),
-            currentUrl: window.location.href,
-            encodedUrl: currentUrl,
-            metamaskUrl: metamaskUrl,
-            protocol: window.location.protocol,
-            host: window.location.host,
-            pathname: window.location.pathname,
-            search: window.location.search,
-            hash: window.location.hash
-          });
-          
-          // Store the current timestamp to track when we initiated the redirect
-          const redirectTime = Date.now().toString();
-          localStorage.setItem('metamask_redirect_time', redirectTime);
-          console.log("🔍 [MOBILE DEBUG] Stored redirect timestamp:", redirectTime);
-          
-          // Method 1: Try the proper MetaMask deep link format
-          try {
-            console.log("🔍 [MOBILE DEBUG] Method 1: Creating iframe for deep link");
-            // Use a more reliable approach for mobile deep linking
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = metamaskUrl;
-            document.body.appendChild(iframe);
-            console.log("🔍 [MOBILE DEBUG] Iframe created and added to DOM");
-            
-            // Remove iframe after a short delay
-            setTimeout(() => {
-              try {
-                document.body.removeChild(iframe);
-                console.log("🔍 [MOBILE DEBUG] Iframe removed from DOM");
-              } catch (error) {
-                console.log("🔍 [MOBILE DEBUG] Error removing iframe:", error);
-              }
-            }, 1000);
-          } catch (error) {
-            console.log("🔍 [MOBILE DEBUG] Iframe method failed:", error);
-          }
-          
-          // Method 2: Direct window.location as fallback
-          try {
-            console.log("🔍 [MOBILE DEBUG] Method 2: Direct window.location redirect");
-            window.location.href = metamaskUrl;
-            console.log("🔍 [MOBILE DEBUG] Window.location redirect attempted");
-          } catch (error) {
-            console.log("🔍 [MOBILE DEBUG] Direct redirect failed:", error);
-          }
-          
-          // Method 3: Create a temporary link to trigger the app
-          try {
-            console.log("🔍 [MOBILE DEBUG] Method 3: Creating temporary link");
-            const link = document.createElement('a');
-            link.href = metamaskUrl;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            console.log("🔍 [MOBILE DEBUG] Link created and added to DOM");
-            link.click();
-            console.log("🔍 [MOBILE DEBUG] Link clicked");
-            document.body.removeChild(link);
-            console.log("🔍 [MOBILE DEBUG] Link removed from DOM");
-          } catch (error) {
-            console.log("🔍 [MOBILE DEBUG] Link method failed:", error);
-          }
-          
-          // Set a flag to indicate we're waiting for MetaMask
-          localStorage.setItem('waiting_for_metamask', 'true');
-          
-          // Don't show any popup messages - let the background detection handle it
-          console.log("🔍 [MOBILE DEBUG] MetaMask not detected, attempting silent redirect");
-          
-          // Don't throw an error, just return early to allow the waiting mechanism to work
-          setState(prev => ({ ...prev, isConnecting: false }));
-          return;
+      // Check if MetaMask is available
+      if (!hasMetaMask) {
+        const isMobileDevice = isMobile();
+        
+        if (isMobileDevice) {
+          console.log("🔍 [WALLET DEBUG] Mobile: MetaMask not detected");
+          throw new Error('MetaMask not detected. Please use the MetaMask mobile app browser or install MetaMask browser extension.');
         } else {
-          // MetaMask is available on mobile, clear the waiting flag
-          localStorage.removeItem('waiting_for_metamask');
-        }
-      } else {
-        // Desktop connection logic
-        if (!hasMetaMask) {
-          console.log("🔍 [MOBILE DEBUG] Desktop: MetaMask not installed");
+          console.log("🔍 [WALLET DEBUG] Desktop: MetaMask not installed");
           throw new Error('MetaMask not installed. Please install the MetaMask browser extension.');
         }
       }
 
       // Request account access
-      console.log("🔍 [MOBILE DEBUG] Requesting account access");
+      console.log("🔍 [WALLET DEBUG] Requesting account access");
       const accounts = await (window as any).ethereum.request({
         method: 'eth_requestAccounts',
       });
 
-      console.log("🔍 [MOBILE DEBUG] Accounts received:", accounts);
+      console.log("🔍 [WALLET DEBUG] Accounts received:", accounts);
 
       if (accounts.length === 0) {
-        console.log("🔍 [MOBILE DEBUG] No accounts found");
-        throw new Error('No accounts found');
+        console.log("🔍 [WALLET DEBUG] No accounts found");
+        throw new Error('No accounts found. Please connect an account in MetaMask.');
       }
 
       const account = accounts[0];
-      console.log("🔍 [MOBILE DEBUG] Using account:", account);
+      console.log("🔍 [WALLET DEBUG] Using account:", account);
       
       const provider = new ethers.BrowserProvider((window as any).ethereum);
       const signer = await provider.getSigner();
       const network = await provider.getNetwork();
       const balance = await provider.getBalance(account);
       
-      console.log("🔍 [MOBILE DEBUG] Wallet details:", {
+      console.log("🔍 [WALLET DEBUG] Wallet details:", {
         account,
         chainId: network.chainId.toString(),
         balance: ethers.formatEther(balance)
@@ -364,6 +262,7 @@ export const useWeb3 = () => {
 
       // Check if we're on the correct network
       if (!isCorrectNetwork(network.chainId.toString())) {
+        console.log("🔍 [WALLET DEBUG] Wrong network, attempting to switch");
         // Try to switch to BSC mainnet first, then testnet if that fails
         try {
           await switchToBSC(false); // Try mainnet first
@@ -410,10 +309,9 @@ export const useWeb3 = () => {
 
     } catch (error: any) {
       const errorMessage = error.message || 'Failed to connect wallet';
-      console.error("🔍 [MOBILE DEBUG] Connection failed:", {
+      console.error("🔍 [WALLET DEBUG] Connection failed:", {
         error: errorMessage,
         stack: error.stack,
-        isMobile: isMobile(),
         hasMetaMask: isMetaMaskInstalled()
       });
       
@@ -423,14 +321,11 @@ export const useWeb3 = () => {
         error: errorMessage,
       }));
       
-      // Don't show toast for mobile redirect attempts
-      if (!errorMessage.includes('MetaMask mobile app required')) {
-        toast({
-          title: 'Connection Failed',
-          description: errorMessage,
-          variant: 'destructive',
-        });
-      }
+      toast({
+        title: 'Connection Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
       
       throw error;
     }
@@ -593,198 +488,9 @@ export const useWeb3 = () => {
     checkConnection();
   }, [isMetaMaskInstalled, connect]);
 
-  // Check for MetaMask availability on mobile when waiting for it
-  useEffect(() => {
-    if (!isMobileDevice) return;
-
-    const isWaitingForMetaMask = localStorage.getItem('waiting_for_metamask') === 'true';
-    if (!isWaitingForMetaMask) return;
-
-    // Immediate check when component mounts
-    const immediateCheck = async () => {
-      const hasMetaMask = checkMetaMaskAvailability();
-      setIsMetaMaskMobile(hasMetaMask);
-      
-      if (hasMetaMask && !state.isConnected && !state.isConnecting) {
-        console.log("🔍 [MOBILE DEBUG] MetaMask detected on immediate check, attempting connection");
-        try {
-          await connect();
-          localStorage.removeItem('waiting_for_metamask');
-        } catch (error) {
-          console.log("🔍 [MOBILE DEBUG] Immediate auto-connection failed:", error);
-        }
-      }
-    };
-
-    immediateCheck();
-  }, [isMobileDevice, checkMetaMaskAvailability, state.isConnected, state.isConnecting, connect]);
-
-  // Listen for page visibility changes and focus events to detect when user returns from MetaMask app
-  useEffect(() => {
-    if (!isMobileDevice) return;
-
-    const handleVisibilityChange = async () => {
-      console.log("🔍 [MOBILE DEBUG] Page visibility changed:", {
-        timestamp: new Date().toISOString(),
-        visibilityState: document.visibilityState,
-        hidden: document.hidden,
-        isConnected: state.isConnected,
-        isConnecting: state.isConnecting
-      });
-      
-      if (document.visibilityState === 'visible') {
-        console.log("🔍 [MOBILE DEBUG] Page became visible, checking MetaMask availability");
-        
-        // Re-check MetaMask availability when page becomes visible
-        const hasMetaMask = checkMetaMaskAvailability();
-        setIsMetaMaskMobile(hasMetaMask);
-        
-        console.log("🔍 [MOBILE DEBUG] Visibility change - MetaMask check result:", {
-          hasMetaMask: hasMetaMask,
-          isConnected: state.isConnected,
-          isConnecting: state.isConnecting,
-          shouldAttemptConnection: hasMetaMask && !state.isConnected && !state.isConnecting
-        });
-        
-        // If MetaMask is now available and we're not connected, try to connect
-        if (hasMetaMask && !state.isConnected && !state.isConnecting) {
-          console.log("🔍 [MOBILE DEBUG] MetaMask detected after page visibility change, attempting connection");
-          try {
-            await connect();
-          } catch (error) {
-            console.log("🔍 [MOBILE DEBUG] Auto-connection failed:", error);
-          }
-        }
-      }
-    };
-
-    const handleFocus = async () => {
-      console.log("🔍 [MOBILE DEBUG] Window focused, checking MetaMask availability");
-      
-      // Re-check MetaMask availability when window gains focus
-      const hasMetaMask = checkMetaMaskAvailability();
-      setIsMetaMaskMobile(hasMetaMask);
-      
-      console.log("🔍 [MOBILE DEBUG] Focus change - MetaMask check result:", {
-        hasMetaMask: hasMetaMask,
-        isConnected: state.isConnected,
-        isConnecting: state.isConnecting,
-        shouldAttemptConnection: hasMetaMask && !state.isConnected && !state.isConnecting
-      });
-      
-      // If MetaMask is now available and we're not connected, try to connect
-      if (hasMetaMask && !state.isConnected && !state.isConnecting) {
-        console.log("🔍 [MOBILE DEBUG] MetaMask detected after focus, attempting connection");
-        try {
-          await connect();
-        } catch (error) {
-          console.log("🔍 [MOBILE DEBUG] Auto-connection failed:", error);
-        }
-      }
-    };
-
-    // Add event listeners
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', handleFocus);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', handleFocus);
-    };
-  }, [isMobileDevice, checkMetaMaskAvailability, state.isConnected, state.isConnecting, connect]);
-
-  // Periodic check for MetaMask availability when waiting for it
-  useEffect(() => {
-    if (!isMobileDevice) return;
-
-    const isWaitingForMetaMask = localStorage.getItem('waiting_for_metamask') === 'true';
-    if (!isWaitingForMetaMask) return;
-
-    console.log("🔍 [MOBILE DEBUG] Waiting for MetaMask, starting periodic checks");
-    
-    let checkCount = 0;
-    const checkInterval = setInterval(async () => {
-      checkCount++;
-      console.log(`🔍 [MOBILE DEBUG] Periodic check #${checkCount}`, {
-        timestamp: new Date().toISOString(),
-        checkCount: checkCount,
-        isConnected: state.isConnected,
-        isConnecting: state.isConnecting
-      });
-      
-      const hasMetaMask = checkMetaMaskAvailability();
-      setIsMetaMaskMobile(hasMetaMask);
-      
-      console.log(`🔍 [MOBILE DEBUG] Periodic check #${checkCount} result:`, {
-        hasMetaMask: hasMetaMask,
-        isConnected: state.isConnected,
-        isConnecting: state.isConnecting,
-        shouldAttemptConnection: hasMetaMask && !state.isConnected && !state.isConnecting
-      });
-      
-      if (hasMetaMask && !state.isConnected && !state.isConnecting) {
-        console.log("🔍 [MOBILE DEBUG] MetaMask detected during periodic check, attempting connection");
-        try {
-          await connect();
-          localStorage.removeItem('waiting_for_metamask');
-          localStorage.removeItem('metamask_redirect_time');
-          clearInterval(checkInterval);
-          console.log("🔍 [MOBILE DEBUG] Connection successful, cleared interval and localStorage");
-        } catch (error) {
-          console.log("🔍 [MOBILE DEBUG] Auto-connection failed during periodic check:", error);
-        }
-      }
-      
-      // After 10 seconds, show a helpful message if still waiting
-      if (checkCount === 10 && !hasMetaMask) {
-        console.log("🔍 [MOBILE DEBUG] Still waiting for MetaMask after 10 seconds");
-        toast({
-          title: 'MetaMask Not Detected',
-          description: 'Please ensure you\'re using the MetaMask browser or install MetaMask app',
-          variant: 'destructive',
-        });
-      }
-      
-      // After 20 seconds, show more specific guidance
-      if (checkCount === 20 && !hasMetaMask) {
-        console.log("🔍 [MOBILE DEBUG] Still waiting for MetaMask after 20 seconds");
-        toast({
-          title: 'Connection Help',
-          description: 'Try: 1) Open MetaMask app 2) Use browser inside MetaMask 3) Visit this site again',
-          variant: 'destructive',
-        });
-      }
-    }, 1000); // Check every 1 second for faster detection
-
-    // Clear interval after 30 seconds to avoid infinite checking
-    const timeout = setTimeout(() => {
-      clearInterval(checkInterval);
-      localStorage.removeItem('waiting_for_metamask');
-      localStorage.removeItem('metamask_redirect_time');
-      
-      // Show final instructions if still not connected
-      if (!state.isConnected) {
-        toast({
-          title: 'Connection Timeout',
-          description: 'Please try: 1) Open MetaMask app 2) Use browser inside MetaMask 3) Visit this site again',
-          variant: 'destructive',
-        });
-        
-        // Clear the waiting flag so user can try again
-        localStorage.removeItem('waiting_for_metamask');
-        localStorage.removeItem('metamask_redirect_time');
-      }
-    }, 30000);
-
-    return () => {
-      clearInterval(checkInterval);
-      clearTimeout(timeout);
-    };
-  }, [isMobileDevice, checkMetaMaskAvailability, state.isConnected, state.isConnecting, connect]);
-
   // Function to clear waiting state and allow retry
   const clearWaitingState = useCallback(() => {
-    console.log("🔍 [MOBILE DEBUG] Clearing waiting state");
+    console.log("🔍 [WALLET DEBUG] Clearing waiting state");
     localStorage.removeItem('waiting_for_metamask');
     localStorage.removeItem('metamask_redirect_time');
     setState(prev => ({ ...prev, isConnecting: false, error: null }));

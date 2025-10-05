@@ -32,7 +32,18 @@ export function AuthForm() {
     try {
       setLoading(true);
       await signInWithGoogle();
-      router.push("/dashboard");
+      
+      // Check if we're returning from a redirect
+      const redirectUrl = localStorage.getItem('google_auth_redirect_url');
+      if (redirectUrl) {
+        // Clear the redirect URL and redirect to dashboard
+        localStorage.removeItem('google_auth_redirect_url');
+        router.push("/dashboard");
+      } else {
+        // Normal flow - redirect to dashboard
+        router.push("/dashboard");
+      }
+      
       toast({
         title: "Welcome to DreamCoin!",
         description: "Successfully signed in with Google. Let's build your empire!",
@@ -46,6 +57,10 @@ export function AuthForm() {
       } else if (error.code === 'auth/cancelled-popup-request') {
         // Don't show error for cancelled popup
         console.log('Authentication popup was cancelled - this is normal behavior');
+        return;
+      } else if (error.message === 'Redirect initiated') {
+        // This is expected for MetaMask browser redirect flow
+        console.log('Google sign-in redirect initiated - this is normal for MetaMask browser');
         return;
       } else if (error.code === 'auth/popup-blocked') {
         console.error('Popup blocked error:', error);

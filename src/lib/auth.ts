@@ -43,27 +43,18 @@ export class AuthService {
 
   async signInWithGoogle(): Promise<UserProfile> {
     try {
-      const result = await signInWithPopup(auth, this.googleProvider);
-      const user = result.user;
+      // Check if we're in MetaMask browser and handle accordingly
+      const isMetaMaskBrowser = this.isMetaMaskBrowser();
       
-      // Set MCP context first
-      const context = createMCPContext(user.uid, { method: 'google' });
-      mcpManager.setContext(context);
-      
-      const userProfile = await this.createOrUpdateUserProfile(user);
-      
-      // Emit MCP event (now context is set)
-      try {
-        await emitMCPEvent('user_authenticated', {
-          method: 'google',
-          userId: user.uid,
-          userProfile,
-        });
-      } catch (mcpError) {
-        console.warn('MCP event failed, continuing with auth:', mcpError);
+      if (isMetaMaskBrowser) {
+        console.log('🔍 [AUTH DEBUG] Detected MetaMask browser, using redirect method');
+        // Use redirect method for MetaMask browser
+        return await this.signInWithGoogleRedirect();
+      } else {
+        console.log('🔍 [AUTH DEBUG] Using popup method for standard browser');
+        // Use popup method for standard browsers
+        return await this.signInWithGooglePopup();
       }
-
-      return userProfile;
     } catch (error: any) {
       // Handle specific Firebase auth errors silently
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
@@ -74,6 +65,99 @@ export class AuthService {
         console.error('Google sign-in error:', error);
         throw error;
       }
+    }
+  }
+
+  private isMetaMaskBrowser(): boolean {
+    if (typeof window === 'undefined') return false;
+    
+    const userAgent = navigator.userAgent;
+    const ethereum = (window as any).ethereum;
+    
+    // Check for MetaMask browser indicators
+    return (
+      userAgent.includes('MetaMask') ||
+      userAgent.includes('WebView') ||
+      (ethereum && ethereum.isMetaMask) ||
+      // Additional check for MetaMask mobile browser
+      (userAgent.includes('Mobile') && ethereum && ethereum.isMetaMask)
+    );
+  }
+
+  private async signInWithGooglePopup(): Promise<UserProfile> {
+    const result = await signInWithPopup(auth, this.googleProvider);
+    const user = result.user;
+    
+    // Set MCP context first
+    const context = createMCPContext(user.uid, { method: 'google' });
+    mcpManager.setContext(context);
+    
+    const userProfile = await this.createOrUpdateUserProfile(user);
+    
+    // Emit MCP event (now context is set)
+    try {
+      await emitMCPEvent('user_authenticated', {
+        method: 'google',
+        userId: user.uid,
+        userProfile,
+      });
+    } catch (mcpError) {
+      console.warn('MCP event failed, continuing with auth:', mcpError);
+    }
+
+    return userProfile;
+  }
+
+  private async signInWithGoogleRedirect(): Promise<UserProfile> {
+    // For MetaMask browser, we'll use a different approach
+    // Store the current URL to redirect back after auth
+    const currentUrl = window.location.href;
+    localStorage.setItem('google_auth_redirect_url', currentUrl);
+    
+    // Use redirect method instead of popup
+    const { signInWithRedirect, getRedirectResult } = await import('firebase/auth');
+    
+    try {
+      // Check if we're returning from a redirect
+      const result = await getRedirectResult(auth);
+      
+      if (result) {
+        // User just returned from redirect
+        const user = result.user;
+        
+        // Set MCP context first
+        const context = createMCPContext(user.uid, { method: 'google' });
+        mcpManager.setContext(context);
+        
+        const userProfile = await this.createOrUpdateUserProfile(user);
+        
+        // Emit MCP event (now context is set)
+        try {
+          await emitMCPEvent('user_authenticated', {
+            method: 'google',
+            userId: user.uid,
+            userProfile,
+          });
+        } catch (mcpError) {
+          console.warn('MCP event failed, continuing with auth:', mcpError);
+        }
+
+        // Clear redirect URL
+        localStorage.removeItem('google_auth_redirect_url');
+        
+        return userProfile;
+      } else {
+        // No redirect result, initiate redirect
+        await signInWithRedirect(auth, this.googleProvider);
+        // This will redirect the page, so we won't reach here
+        throw new Error('Redirect initiated');
+      }
+    } catch (error: any) {
+      if (error.message === 'Redirect initiated') {
+        throw error; // Re-throw redirect errors
+      }
+      console.error('Google redirect sign-in error:', error);
+      throw error;
     }
   }
 
