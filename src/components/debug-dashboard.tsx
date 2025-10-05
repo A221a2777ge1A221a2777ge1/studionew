@@ -22,7 +22,7 @@ interface DebugInfo {
 }
 
 export function DebugDashboard() {
-  const { isConnected, account, chainId, isConnecting, connect, disconnect } = useWeb3();
+  const { isConnected, account, chainId, isConnecting, connect, disconnect, clearWaitingState } = useWeb3();
   const [isVisible, setIsVisible] = useState(false);
   const [debugInfo, setDebugInfo] = useState<DebugInfo | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
@@ -220,12 +220,15 @@ export function DebugDashboard() {
           </Card>
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={connect} disabled={isConnecting}>
               {isConnecting ? "Connecting..." : "Connect Wallet"}
             </Button>
             <Button onClick={disconnect} variant="outline" disabled={!isConnected}>
               Disconnect
+            </Button>
+            <Button onClick={clearWaitingState} variant="outline">
+              Clear Waiting State
             </Button>
           </div>
         </CardContent>

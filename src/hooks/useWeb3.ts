@@ -739,9 +739,19 @@ export const useWeb3 = () => {
       if (checkCount === 10 && !hasMetaMask) {
         console.log("🔍 [MOBILE DEBUG] Still waiting for MetaMask after 10 seconds");
         toast({
-          title: 'Still connecting...',
-          description: 'If you\'re in MetaMask app, please return to this website to complete the connection',
-          variant: 'default',
+          title: 'MetaMask Not Detected',
+          description: 'Please ensure you\'re using the MetaMask browser or install MetaMask app',
+          variant: 'destructive',
+        });
+      }
+      
+      // After 20 seconds, show more specific guidance
+      if (checkCount === 20 && !hasMetaMask) {
+        console.log("🔍 [MOBILE DEBUG] Still waiting for MetaMask after 20 seconds");
+        toast({
+          title: 'Connection Help',
+          description: 'Try: 1) Open MetaMask app 2) Use browser inside MetaMask 3) Visit this site again',
+          variant: 'destructive',
         });
       }
     }, 1000); // Check every 1 second for faster detection
@@ -756,9 +766,13 @@ export const useWeb3 = () => {
       if (!state.isConnected) {
         toast({
           title: 'Connection Timeout',
-          description: 'Please return to this website and try connecting again, or use the MetaMask browser to visit this site',
+          description: 'Please try: 1) Open MetaMask app 2) Use browser inside MetaMask 3) Visit this site again',
           variant: 'destructive',
         });
+        
+        // Clear the waiting flag so user can try again
+        localStorage.removeItem('waiting_for_metamask');
+        localStorage.removeItem('metamask_redirect_time');
       }
     }, 30000);
 
@@ -767,6 +781,14 @@ export const useWeb3 = () => {
       clearTimeout(timeout);
     };
   }, [isMobileDevice, checkMetaMaskAvailability, state.isConnected, state.isConnecting, connect]);
+
+  // Function to clear waiting state and allow retry
+  const clearWaitingState = useCallback(() => {
+    console.log("🔍 [MOBILE DEBUG] Clearing waiting state");
+    localStorage.removeItem('waiting_for_metamask');
+    localStorage.removeItem('metamask_redirect_time');
+    setState(prev => ({ ...prev, isConnecting: false, error: null }));
+  }, []);
 
   return {
     ...state,
@@ -782,6 +804,7 @@ export const useWeb3 = () => {
     isMetaMaskMobileAvailable: isMetaMaskMobileAvailable(),
     isCorrectNetwork: state.chainId ? isCorrectNetwork(state.chainId) : false,
     currentNetworkConfig: state.chainId ? getNetworkConfig(state.chainId) : null,
+    clearWaitingState,
   };
 };
 

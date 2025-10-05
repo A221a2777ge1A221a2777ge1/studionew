@@ -46,21 +46,32 @@ export function MobileConnectionHelper({ isVisible, onRetry, onClose }: MobileCo
         <CardContent className="space-y-4">
           <Alert>
             <AlertDescription>
-              <strong>If you're in the MetaMask app:</strong>
+              <strong>Current Status:</strong>
+              <div className="mt-2 text-sm">
+                <div>• MetaMask not detected in current browser</div>
+                <div>• You need to use MetaMask's built-in browser</div>
+              </div>
+            </AlertDescription>
+          </Alert>
+
+          <Alert>
+            <AlertDescription>
+              <strong>Solution - Use MetaMask Browser:</strong>
               <ol className="mt-2 space-y-1 text-sm">
-                <li>1. Complete the connection in MetaMask</li>
-                <li>2. Return to this website</li>
-                <li>3. The connection will complete automatically</li>
+                <li>1. Open MetaMask mobile app</li>
+                <li>2. Tap the "Browser" tab at the bottom</li>
+                <li>3. Type this website URL in the address bar</li>
+                <li>4. The connection will work automatically</li>
               </ol>
             </AlertDescription>
           </Alert>
 
           <Alert>
             <AlertDescription>
-              <strong>If MetaMask didn't open:</strong>
+              <strong>Alternative - Install MetaMask:</strong>
               <ol className="mt-2 space-y-1 text-sm">
-                <li>1. Install MetaMask mobile app</li>
-                <li>2. Open MetaMask app</li>
+                <li>1. Download MetaMask from Play Store/App Store</li>
+                <li>2. Create or import your wallet</li>
                 <li>3. Use the browser inside MetaMask</li>
                 <li>4. Visit this website again</li>
               </ol>
