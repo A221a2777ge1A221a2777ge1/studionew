@@ -1,6 +1,40 @@
+"use client";
+
 import { AuthForm } from "@/components/auth-form";
+import { WalletConnector } from "@/components/wallet-connector";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function Home() {
+  const { user, userProfile, loading } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+  const [showWalletConnector, setShowWalletConnector] = useState(false);
+
+  // Check if user has wallet connected
+  useEffect(() => {
+    if (user && userProfile && userProfile.walletAddress) {
+      // User is fully set up, redirect to dashboard
+      router.push("/dashboard");
+    } else if (user && !showWalletConnector) {
+      // User is signed in but no wallet, show wallet connector
+      setShowWalletConnector(true);
+    }
+  }, [user, userProfile, showWalletConnector, router]);
+
+  const handleWalletLinked = (address: string) => {
+    toast({
+      title: "Setup Complete!",
+      description: "Your wallet is connected. Redirecting to dashboard...",
+    });
+    setTimeout(() => {
+      router.push("/dashboard");
+    }, 2000);
+  };
+
   return (
     <main className="min-h-screen w-full bg-background relative overflow-hidden">
       {/* Tribal Pattern Background */}
@@ -27,7 +61,33 @@ export default function Home() {
         </div>
         
         <div className="mt-12 w-full max-w-md">
-          <AuthForm />
+          {!user ? (
+            <AuthForm />
+          ) : showWalletConnector ? (
+            <div className="space-y-6">
+              {/* Welcome Message */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-2">
+                    <h2 className="text-2xl font-bold text-green-500">Welcome back!</h2>
+                    <p className="text-muted-foreground">
+                      Signed in as {user.email}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Now connect your wallet to complete setup
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Wallet Connector */}
+              <WalletConnector 
+                onWalletLinked={handleWalletLinked}
+              />
+            </div>
+          ) : (
+            <AuthForm />
+          )}
         </div>
       </div>
     </main>

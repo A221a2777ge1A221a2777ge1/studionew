@@ -12,8 +12,9 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Wallet } from "lucide-react";
 import { AuthGuide } from "@/components/auth-guide";
+import { WalletConnector } from "@/components/wallet-connector";
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg {...props} role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -25,9 +26,10 @@ const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
 export function AuthForm() {
   const router = useRouter();
   const { toast } = useToast();
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, user, userProfile } = useAuth();
   
   const [loading, setLoading] = useState(false);
+  const [showWalletConnector, setShowWalletConnector] = useState(false);
 
   const handleGoogleSignIn = async () => {
     try {
@@ -41,18 +43,17 @@ export function AuthForm() {
       // Check if we're returning from a redirect
       const redirectUrl = localStorage.getItem('google_auth_redirect_url');
       if (redirectUrl) {
-        // Clear the redirect URL and redirect to dashboard
+        // Clear the redirect URL
         localStorage.removeItem('google_auth_redirect_url');
-        router.push("/dashboard");
-      } else {
-        // Normal flow - redirect to dashboard
-        router.push("/dashboard");
       }
       
       toast({
         title: "Welcome to DreamCoin!",
-        description: "Successfully signed in with Google. Let's build your empire!",
+        description: "Successfully signed in with Google. Now connect your wallet to start trading!",
       });
+
+      // Don't redirect to dashboard immediately - show wallet connector
+      setShowWalletConnector(true);
     } catch (error: any) {
       // Handle specific Firebase auth errors
       if (error.code === 'auth/popup-closed-by-user') {
